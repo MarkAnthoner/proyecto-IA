@@ -1,0 +1,157 @@
+
+{% extends '../layouts/base.html' %}
+
+{% load static %}
+
+
+{%  block content %}
+
+    <div>
+        <h1>Association Rules - Apriori Algorithm</h1>
+    </div>
+
+    <div class="contenedor-texto-algoritmo contenedor-texto-algoritmo1">
+        <p>Apriori es un algoritmo de <b>reglas de asociación</b> (aprendizaje no supervisado), empleado en <b>sistemas de recomendación</b>. Un sistema de recomendación incluye uno o más algoritmos de Inteligencia Artificial que buscan contenido (información) sobre una fuente de datos para generar recomendaciones en función de los gustos o necesidades de la persona.
+            
+            Las reglas de asociación es un algoritmo de aprendizaje automático basado en reglas, que se utiliza para encontrar <b>relaciones ocultas en los datos</b>.
+        </p>
+    </div>
+
+    <div class="contenedor-texto-algoritmo contenedor-texto-algoritmo2">
+        <p>El algoritmo Apriori requiere un conjunto de <b>datos transaccionales</b>. Los datos deben ser operativos, empleados para controlar y ejecutar tareas, como: ventas, transacciones, procesos y otros. El objetivo de aplicar este algoritmo es obtener reglas de asociación. En este caso, se usará un conjunto de datos que contiene información sobre una <b>plataforma de películas</b>, donde los clientes pueden rentar o comprar este tipo de contenidos. Antes de ejecutar el algoritmo es recomendable observar la distribución de la frecuencia de los elementos, por lo que sí se presiona el siguiente <b>botón</b>, se mostrará la distribución de los datos según la frecuencia.
+        </p>
+    </div>
+
+    <div class="boton-esconder" id="boton_esconder">
+        <button class="buttonAlg">
+            <span>Distribución de los datos</span>
+        </button>
+    </div>
+
+    <div class="boton-esconder" id="boton_esconder_ejecucion">
+        <button class="buttonAlg">
+            <span>Ejecución del algoritmo</span>
+        </button>
+    </div>
+
+    <div class="contenedor-algoritmo" id="contenedor_algoritmo" url-endpoint='{% url "api-chart-data" %}'>
+
+        <canvas id="myChart" width="400" height="400"></canvas>
+
+    </div>
+
+    <div id="ejecucion-algoritmo" class="contenedor-ejecucion" style="display: {{display}}">
+        <div>
+            <h2>Ejecución Apriori</h2>
+        </div>
+    
+        <div class="contenedor-texto-algoritmo contenedor-texto-apri">
+            <p>La función Apriori de Python requiere que el conjunto de datos tenga la forma de una lista de listas, donde cada transacción es una lista interna dentro de una gran lista. Esto ya se tiene internamente, por lo que ya se puede ajustar la <b>configuración</b> o el entorno del algoritmo.</p>
+        </div>
+    
+        <div class="contenedor-texto-algoritmo contenedor-formulario">
+            <h3>Ingrese los datos requeridos (Porcentaje en decimal 0-1)</h3>
+            <div class="contenedor-texto-algoritmo">
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <label for="spmin">Soporte mínimo:</label>
+                    <input type="number" step="0.001" id="spmin" placeholder="Soporte mínimo"  name="soporte" value="0.01">
+                    <label for="conmin">Confianza mínima:</label>
+                    <input type="number" step="0.001" id="conmin" placeholder="Confianza mínima" name="confianza" value="0.3">
+                    <label for="ele">Elevación:</label>
+                    <input type="number" step="0.001" id="ele" placeholder="Elevación" name="elevacion" value="2">
+                    
+                    <label for="usar-algoritmo">Enviar -></label>
+                    <input class="boton-centro" type="submit" value="Subir" id="usar-algoritmo" >
+                </form>
+            </div>
+        </div>
+    
+        <div class="contenedor-texto-algoritmo contenedor-resultados">
+            <h3>Resultados</h3>
+        </div>
+    
+        {% for elemento in list %}
+    
+        <div class="contenedor-texto-algoritmo etiquetas-resultados">
+            <h1>{{elemento.Regla}}</h1> 
+            <h2>{{elemento.Soporte}}</h2>
+            <h2>{{elemento.Confianza}}</h2>
+            <h2>{{elemento.Lift}}</h2>
+        </div>
+    
+        {% endfor %}
+    </div>
+    
+
+    <script>
+        $("#boton_esconder").click(function(){
+            $("#contenedor_algoritmo").toggle(1000);
+        }); 
+
+        $("#boton_esconder_ejecucion").click(function(){
+            $("#ejecucion-algoritmo").toggle(1000);
+        });
+        
+    </script>
+
+
+    <script> 
+
+    function obtenerColorRandom() {
+        var letters = '0123456789ABCDEF'.split('');
+        var color = '#';
+        for (var i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    }
+
+    function obtenerColorCadaPelicula(count) {
+        var data =[];
+        for (var i = 0; i < count; i++) {
+            data.push(obtenerColorRandom());
+        }
+        return data;
+    }
+
+    var endpoint = '{% url "api-chart-data" %}'
+    
+    $.ajax({
+        method: "GET",
+        url: endpoint,
+        success: function(data){
+            const ctx = document.getElementById('myChart').getContext('2d');
+            const myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.items,
+                    datasets: [{
+                        axis: 'y',
+                        //label: 'Distribución de la frecuencia de los datos',
+                        data: data.frecuencia,
+                        backgroundColor: obtenerColorCadaPelicula(data.cuenta),
+                        fill: false,
+                        borderWidth: 1,                        
+                    }]
+                    },
+                options: {
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            console.log(data)
+        },
+        error: function(error_data){
+            console.log("error")
+        }
+    })
+
+    
+    </script>
+      
+{% endblock %}

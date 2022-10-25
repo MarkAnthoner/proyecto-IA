@@ -1,0 +1,125 @@
+
+
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TAIAPP</title>
+  <!-- Fuentes de google -->
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500&display=swap" rel="stylesheet">
+  <!-- Fuentes Awesome para iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <!-- CSS personalizado -->
+  <link rel="stylesheet" href="{% static 'styles.css' %}"> 
+  <!-- Favicon o icono de la pestaña -->
+  <link rel="shortcut icon" href="{% static 'img/brand.png' %}"> 
+  <!--Integración de Jquery y ajax-->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script> 
+  <!--Integración de CHARTJS-->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+</head>
+
+<body>
+
+  <!--Contenedor principal-->
+  <div class="container">
+
+
+    <!-- Navegacion -->
+    <nav class="nav-main">
+      <!-- Icono de la navegacion -->
+      <img src="{% static 'img/brand.png' %}" alt="TechNews Logo" class="nav-brand">
+      <!-- Elementos de la izquierda -->
+      <ul class="nav-menu">
+        <li>
+          <a href="{% url 'index' %}">Inicio</a>
+        </li>
+        <li>
+          <a href="{% url 'apriori' %}">Apriori</a>
+        </li>
+        <li>
+          {# Se coloca unicamente el path que está en el archivo urls.py, pero, con el 'name'#}
+          <a href="{% url 'temas' %}">Temas de preferencia</a>
+        </li>
+        <li>
+          <a href="{% url 'sitios' %}">Sitios importantes</a>
+        </li>
+        <li>
+          <a href="{% url 'acerca' %}">Acerca de</a>
+        </li>
+      </ul>
+
+      <!-- Elemento de la derecha -->
+      <ul class="nav-menu-right">
+        <li>
+          <a href="#">
+            <i class="fas fa-search"></i>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <hr>
+
+    {% block content %}
+    {% endblock %}
+
+
+  <!-- Ligas del Footer o pie de pagina -->
+  <div class="footer-links">
+    <div class="footer-container">
+      <ul>
+        <li>
+          <a href="#">
+            <h3>Titulo uno</h3>
+          </a>
+        </li>
+        <li>
+          <a href="#">Desarrollo movil</a>
+        </li>
+        <li>
+          <a href="#">Machine Learning e IA</a>
+        </li> 
+      </ul>
+      <ul>
+        <li>
+          <a href="#">
+            <h3>Titulo dos</h3>
+          </a>
+        </li>
+        <li>
+          <a href="#">Programacion</a>
+        </li>
+        <li>
+          <a href="#">Desarrollo web</a>
+        </li>
+      </ul>
+      <ul>
+        <li>
+          <a href="#">
+            <h3>Titulo tres</h3>
+          </a>
+        </li>
+        <li>
+          <a href="#">Startups</a>
+        </li>
+        <li>
+          <a href="#">Ciberseguridad</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+
+  <!-- Footer o pie de pagina -->
+  <footer class="footer">
+    <h3>Marco Antonio Sánchez Pérez</h3>
+  </footer>
+
+
+</body>
+
+</html>
