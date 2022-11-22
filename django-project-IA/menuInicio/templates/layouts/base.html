@@ -26,7 +26,7 @@
     <nav>
         <ul>
             <li>
-                <a href="#" class="logo">
+                <a href="{% url 'index' %}" class="logo">
                     <img src="{% static 'img/brand.png' %}" alt="TechNews Logo">
                     <span class="nav-item">TAIAPP</span>
                 </a>
@@ -35,7 +35,7 @@
                 <i class="fas fa-home"></i>
                 <span class="nav-item">Inicio</span>
             </a></li>
-            <li><a href="{% url 'apriori' %}" class="anchor-item">
+            <li><a href="{% url 'apriori-validacion' %}" class="anchor-item">
                 <i class="fas fa-project-diagram"></i>
                 <span class="nav-item">Apriori</span>
             </a></li>

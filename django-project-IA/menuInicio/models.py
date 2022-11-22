@@ -11,8 +11,11 @@ import json
 
 # Create your models here.
 
+"""
+
+
 class AprioriAlgorithm(models.Model):
-    directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/movies.csv')
+    directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/archivo.csv')
     DatosMovies = pd.read_csv(directorio, header=None)
     #Se incluyen todas las transacciones en una sola lista    .    Columna vertical para contabilizar mejor  7460 x 20
     Transacciones = DatosMovies.values.reshape(-1).tolist() #-1 significa 'dimensión no conocida'
@@ -43,10 +46,7 @@ class AprioriAlgorithm(models.Model):
                    min_support=support, 
                    min_confidence=confidence, 
                    min_lift=lift)
-        """min_support=0.01, 
-                   min_confidence=0.3, 
-                   min_lift=2)"""
-
+     
         ResultadosC1 = list(ReglasC1)
         listaResultados = []
         #"Regla":[],"Soporte":[],"Confianza":[], "Lift":[]};
@@ -85,3 +85,5 @@ class AprioriAlgorithm(models.Model):
 
     def retornaCuenta(self):
         return self.cuenta
+
+"""
