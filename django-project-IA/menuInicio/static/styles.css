@@ -554,8 +554,19 @@ input[type="number"] {
 }
 
 
+
+/*APRIORI SECCION OPCIONES*/
+
+.contenedor-form-ap-opciones{
+  display: grid;
+  grid-template-columns: 2fr 2fr;
+  gap: 1rem;
+}
+
+
 /*APRIORI REPORTE PDF*/
 .ocultar-mensaje-reporte{
+  margin-top: 30px;
   display: none;
 }
 

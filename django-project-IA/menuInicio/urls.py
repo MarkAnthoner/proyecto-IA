@@ -3,13 +3,16 @@ from . import views
 
 urlpatterns = [
     path("", views.index, name="index"),
-    path("temasPreferencia/", views.temasPreferencia, name="temas"),
     path("acercaDe/", views.acercaDe, name="acerca"),
     path("sitiosImportantes/", views.sitiosImportantes, name="sitios"),
 
 
     path("apriori/algoritmo", views.validacionApriori, name="apriori-validacion"),
     path("apriori/algoritmo-eliminar", views.eliminarDataSetApriori, name="apriori-eliminar-dataset"),
+
+
+    path("metricas/algoritmo", views.validacionMetricasDistancia, name="metricas-distancia-validacion"),
+    path("metricas/algoritmo-eliminar", views.eliminarDataSetMetricas, name="metricas-eliminar-dataset"),
 
 
     #path("apriori/algoritmo", views.apriori, name="apriori-algoritmo"),

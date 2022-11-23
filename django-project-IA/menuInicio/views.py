@@ -8,10 +8,6 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.urls import resolve
 
-#import de apriori
-from .apriori import AprioriAlgorithm
-
-
 #Vistas del framework API Rest
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -25,15 +21,39 @@ import os
 #importar archivos
 from django.core.files.storage import FileSystemStorage
 
+#import de apriori
+from .apriori import AprioriAlgorithm
+
+#import de metricas de distancias
+from .metricasDistancia import metricasDistancia
+#para renderizar el mapa de calor
+import urllib
+from io import BytesIO
+import base64
+#para manejar los datos
+import pandas as pd                         # Para la manipulación y análisis de datos
+import numpy as np                          # Para crear vectores y matrices n dimensionales
+import matplotlib.pyplot as plt             # Para generar gráficas a partir de los datos
+import seaborn as sns                       
+from scipy.spatial import distance
+
+
+
 # Create your views here.
 
 
-
+#variables globales de Apriori
 variableNombreApriori = ""
 objetoApriori = AprioriAlgorithm(variableNombreApriori,0,0,0)
-
-accesoValidado = False
+accesoValidadoApriori = False
 lista = []
+
+
+#variables globales de Metricas de distancia
+variableNombreMetricas = ""
+objetoMetricas = metricasDistancia(variableNombreMetricas)
+accesoValidadoMetricas = False
+
 
 
 
@@ -42,28 +62,28 @@ def index(request):
     return render(request, 'index.html')
 
 def temasPreferencia(request):
-    return render(request, 'views/temasPreferencia.html')
+    return render(request, 'views/otros/temasPreferencia.html')
 
 def sitiosImportantes(request):
-    return render(request, 'views/sitiosImportantes.html')
+    return render(request, 'views/otros/sitiosImportantes.html')
 
 def acercaDe(request):
-    return render(request, 'views/acercaDe.html')
+    return render(request, 'views/otros/acercaDe.html')
 
 
 def validacionApriori(request):
 
-    global accesoValidado
+    global accesoValidadoApriori
     global variableNombreApriori
     global objetoApriori
 
     global lista
 
-    if(accesoValidado == False):
+    if(accesoValidadoApriori == False):
         #no se ha validado el dataset, entonces se redirige a la vista de subir archivo
         if request.method == 'GET':
-            accesoValidado = False
-            return render(request, 'views/subirApriori.html')
+            accesoValidadoApriori = False
+            return render(request, 'views/apriori/subirApriori.html')
             #return HttpResponseRedirect(reverse('apriori-subir'))
         else: 
             myfile = request.FILES['archivo']
@@ -87,18 +107,180 @@ def validacionApriori(request):
             objetoApriori = AprioriAlgorithm(variableNombreApriori,0,0,0)
             objetoApriori = objetoApriori.accion()
 
-            accesoValidado = True
+            accesoValidadoApriori = True
 
             #return apriori(request)
-            return render(request, 'views/associationRules.html')
+            return render(request, 'views/apriori/associationRules.html')
             #return HttpResponseRedirect(reverse('apriori-algoritmo'))
     else:
 
 
         if request.method == 'GET':
-            return render(request, 'views/associationRules.html')
+            return render(request, 'views/apriori/associationRules.html')
             #return HttpResponseRedirect(reverse('apriori-algoritmo'))
         else: 
+            #if 'form-ejecucion' in request.POST:
+            if request.POST["form-tipo"] == 'form-ejecucion':
+                if(request.POST["soporte"]=="" or request.POST["confianza"]=="" or request.POST["elevacion"]==""):
+                    return render(request, 'views/apriori/associationRules.html')
+                    #return HttpResponseRedirect(reverse('apriori-algoritmo'))
+                else:
+                    
+                    soporte = float(request.POST["soporte"])
+                    confianza = float(request.POST["confianza"])
+                    elevacion = float(request.POST["elevacion"])
+
+                    
+                    objetoApriori = AprioriAlgorithm(variableNombreApriori, soporte, confianza, elevacion)
+                    objetoApriori = objetoApriori.accionReglasAsoc()
+                    objetoApriori = objetoApriori.accion()
+                    #lista = AprioriAlgorithm(variableNombreApriori, soporte, confianza, elevacion)
+
+                    #global lista
+                    lista = objetoApriori.listaResultados
+                    print(request.POST["form-tipo"])
+
+                    #lista = [1,2,3,4,5,6,7,8,9,10]
+                    return render(request, 'views/apriori/associationRules.html', {
+                        'list':lista,
+                        'display':'block'
+                    })
+            #elif 'form-reporte' in request.POST:
+            elif request.POST["form-tipo"] == 'form-reporte':
+                """Logica de generacion de reporte"""
+                print("Se genera reporte")
+                #global lista
+                return render(request, 'views/apriori/associationRules.html', {
+                        'list':lista,
+                        'display':'block',
+                        'muestraReporte':'block'
+                    })
+                
+
+
+
+
+        #se imprime el directorio actual
+        #print(  os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/')  )
+
+        #se guarda el directorio actual para validar que se haya subido un archivo csv
+        direccion = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/')
+
+        #si sí se subió un csv antes, se redirije al algoritmo apriori
+        if any(File.endswith(".csv") for File in os.listdir( direccion )):
+            #return render(request, 'views/associationRules.html')
+
+            accesoValidadoApriori = True
+            return render(request, 'views/apriori/associationRules.html')
+            #return HttpResponseRedirect(reverse('apriori-algoritmo'))
+        else:
+            #return HttpResponseRedirect(resolve('views/subirApriori.html'))
+            #return HttpResponseRedirect(reverse('apriori-subir'))
+            return render(request, 'views/apriori/subirApriori.html')
+            #return render(request, 'views/subirApriori.html')
+ 
+def eliminarDataSetApriori(request):
+    global accesoValidadoApriori
+    global lista
+    if(accesoValidadoApriori == True):
+        accesoValidadoApriori = False
+        lista = []
+
+        """#Falta agregar logica de eliminar archivo CSV"""
+        #return render(request, 'views/subirApriori.html')
+        return HttpResponseRedirect(reverse('index'))
+    else:
+        #si el acceso ya no es validado, se manda directamente al inicio
+        accesoValidadoApriori = False
+        return render(request, 'views/apriori/subirApriori.html')
+
+"""Uso de Rest framework para trabajar con los datos de APRIORI"""
+class ChartData(APIView):
+
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, format=None): 
+        """data = {
+            "sales": 200,
+            "customers":20,
+        }"""
+
+        global variableNombreApriori
+
+        global objetoApriori
+
+        #items = retornaItems(variableNombreApriori)
+        items = objetoApriori.items
+
+        #frecuencia = retornaFrecuencia(variableNombreApriori)
+        frecuencia = objetoApriori.frecuencia
+
+        #cuenta = retornaCuenta(variableNombreApriori)
+        cuenta = objetoApriori.cuenta
+
+        data = {
+            "items": items,
+            "frecuencia":frecuencia,
+            "cuenta": cuenta,
+        }
+        return Response(data)
+
+
+
+"""Metricas de distancia"""
+def validacionMetricasDistancia(request):
+    global accesoValidadoMetricas
+    global variableNombreMetricas
+    global objetoMetricas
+
+    if(accesoValidadoMetricas == False):
+        #no se ha validado el dataset, entonces se redirige a la vista de subir archivo
+        if request.method == 'GET':
+            accesoValidadoMetricas = False
+            return render(request, 'views/metricas/subirMetricas.html')
+        else: 
+            myfile = request.FILES['archivo-metricas']
+            fs = FileSystemStorage()
+
+            nombreArchivo = myfile.name
+            global variableNombreMetricas
+            variableNombreMetricas = nombreArchivo
+
+            #se pone el directorio completo
+            directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/'+nombreArchivo)
+
+            #se coloca el directorio y el nombre del archivo
+            filename = fs.save(directorio, myfile)
+            uploaded_file_url = fs.url(filename)
+
+
+            global objetoMetricas
+            objetoMetricas = metricasDistancia(variableNombreMetricas)
+            #generamos la matriz inferior
+            objetoMetricas = objetoMetricas.mapaCalor()
+
+            accesoValidadoMetricas = True
+
+            """Poner parte de la impresion en pantalla"""
+            #llamamos al metodo de este archivo que genera el grafico tomando la matriz inferior
+            mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
+
+
+            return render(request, 'views/metricas/metricasDistancia.html', {
+                'mapaCalor':mapaCalorGenerado,
+            })
+            #return HttpResponseRedirect(reverse('apriori-algoritmo'))
+    else:
+
+
+        if request.method == 'GET':
+            return render(request, 'views/metricas/metricasDistancia.html')
+            #return HttpResponseRedirect(reverse('apriori-algoritmo'))
+        else: 
+            """Cambiar todo esto"""
+
+
             #if 'form-ejecucion' in request.POST:
             if request.POST["form-tipo"] == 'form-ejecucion':
                 if(request.POST["soporte"]=="" or request.POST["confianza"]=="" or request.POST["elevacion"]==""):
@@ -150,67 +332,46 @@ def validacionApriori(request):
         if any(File.endswith(".csv") for File in os.listdir( direccion )):
             #return render(request, 'views/associationRules.html')
 
-            accesoValidado = True
-            return render(request, 'views/associationRules.html')
+            accesoValidadoApriori = True
+            return render(request, 'views/metricasDistancia.html')
             #return HttpResponseRedirect(reverse('apriori-algoritmo'))
         else:
             #return HttpResponseRedirect(resolve('views/subirApriori.html'))
             #return HttpResponseRedirect(reverse('apriori-subir'))
-            return render(request, 'views/subirApriori.html')
-            #return render(request, 'views/subirApriori.html')
- 
+            return render(request, 'views/subirMetricas.html')
+    return render(request, 'index.html')
 
-
-def eliminarDataSetApriori(request):
-    global accesoValidado
-    global lista
-    if(accesoValidado == True):
-        accesoValidado = False
-        lista = []
+def eliminarDataSetMetricas(request):
+    global accesoValidadoMetricas
+    if(accesoValidadoMetricas == True):
+        accesoValidadoMetricas = False
 
         """#Falta agregar logica de eliminar archivo CSV"""
         #return render(request, 'views/subirApriori.html')
         return HttpResponseRedirect(reverse('index'))
     else:
         #si el acceso ya no es validado, se manda directamente al inicio
-        accesoValidado = False
-        return render(request, 'views/subirApriori.html')
+        accesoValidadoMetricas = False
+        return render(request, 'views/metricas/subirMetricas.html')
 
+def generarMapaMetricas(matrizInferior, datosCorrelacionados):
+    # Con la matriz de correlaciones, se plantea un mapa de calor para ver que hay variables muy dependientes entre sí: 
+    # perímetro, area, radio, puntos concavos, concavidad
+    # compactacion, puntos concavos, concavidad
 
+    plt.figure(figsize=(14,7))
+    sns.heatmap(datosCorrelacionados, cmap = 'RdBu_r', annot = True, mask = matrizInferior)
 
-"""Uso de Rest framework para trabajar con los datos"""
-class ChartData(APIView):
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
 
-    authentication_classes = []
-    permission_classes = []
+    graphic = base64.b64encode(image_png)
+    graphic = graphic.decode('utf-8')
 
-    def get(self, request, format=None): 
-        """data = {
-            "sales": 200,
-            "customers":20,
-        }"""
-
-        global variableNombreApriori
-
-        global objetoApriori
-
-        #items = retornaItems(variableNombreApriori)
-        items = objetoApriori.items
-
-        #frecuencia = retornaFrecuencia(variableNombreApriori)
-        frecuencia = objetoApriori.frecuencia
-
-        #cuenta = retornaCuenta(variableNombreApriori)
-        cuenta = objetoApriori.cuenta
-
-        data = {
-            "items": items,
-            "frecuencia":frecuencia,
-            "cuenta": cuenta,
-        }
-        return Response(data)
-
-
+    return graphic
 
 
 

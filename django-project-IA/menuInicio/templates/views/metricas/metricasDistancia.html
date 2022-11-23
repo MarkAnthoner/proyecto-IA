@@ -1,0 +1,71 @@
+
+{% extends '../../layouts/base.html' %}
+
+{% load static %}
+
+
+{%  block content %}
+
+    <div>
+        <h1>Métricas de distancia - Matrices con distancias</h1>
+    </div>
+
+    <div class="contenedor-texto-algoritmo contenedor-texto-algoritmo1">
+        <p>En esta vista se mostrarán las diferentes métricas de distancia para conocer la similitud entre datos.
+        </p>
+    </div>
+
+
+    <div class="contenedor-algoritmo-grid" id="contenedor_algoritmo">
+
+        <div class="cardGrid">
+            <div>
+                <h2>Mapa de calor</h2>
+            </div>
+            <div>
+                <img src='data:image/png;base64,{{mapaCalor}}' style="width:90%;height:80%"/>
+            </div>
+        </div>
+
+        <div class="cardGrid">
+            <div>
+                <h2>Datos metricas</h2>
+            </div>
+            <h3>Por aclarar...</h3>
+            
+        </div>
+
+
+        <div id="ejecucion-algoritmo" class="cardGrid-scroll elemento-abajo contenedor-ejecucion" style="display: {{display}}">
+            
+
+            <h2>Otra funcion</h2>
+            <h3>Por aclarar...</h3>
+
+
+            
+        </div>
+
+        <div class="cardGrid elemento-abajo">
+            <h2>Opciones</h2>
+            <h3>Opciones por aclarar</h3>
+            
+        </div>
+
+        <!--width="400" height="400"-->
+    </div>
+
+
+    <script>
+        $("#boton_esconder").click(function(){
+            $("#contenedor_algoritmo").toggle(1000);
+        }); 
+
+        $("#boton_esconder_ejecucion").click(function(){
+            $("#ejecucion-algoritmo").toggle(1000);
+        });
+        
+    </script>
+
+
+{% endblock %}

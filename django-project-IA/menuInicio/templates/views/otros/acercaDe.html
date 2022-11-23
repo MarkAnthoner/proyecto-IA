@@ -1,0 +1,109 @@
+{% extends '../layouts/base.html' %}
+
+{% load static %}
+{%  block content %}
+
+    <div class="logo-main" style="margin-top: 25px;">
+      <h2>El presente proyecto cuenta con diferentes vistas solicitadas por el profesor, una de ellas tiene temas de interés común a los miembros del equipo. También se tiene una vista con sitios web importantes, el index, y esta vista que es la de la información de los miembros del equipo. Es por esto que, a continuación, se presenta la información de los integrantes. </h2>
+    </div>
+
+    <div class="columns-container">
+
+        <ul>
+            <h2 style="text-align: center;">Sánchez Pérez Marco Antonio</h2>
+            <div>
+                <p>
+                    Estudiante de 7 sexto semestre de Ingeniería en Computación de la Facultad de Ingeniería de la UNAM. Diseñador y desarrollador web con conocimientos en HTML, CSS, Javascript y PHP, incluso frameworks como Bootstrap y Laravel.
+                </p>
+                <div class="container-lista">
+                  <ul> 
+                    <li>Gusto por el futbol</li>
+                    <li>Gusto por los videojuegos</li>
+                  </ul>
+                </div>
+                
+            </div>
+
+            <div>
+                <img src="{% static 'img/futbol.png' %}" alt="Futbol">
+            </div>
+            <div style="margin-top: 15px;">
+              <img src="{% static 'img/videogame.png' %}" alt="Videojuego">
+          </div>
+        </ul>
+
+        <ul>
+          <h2 style="text-align: center;">Báez Cadena Duilio Giovani</h2>
+          <div>
+              <p>
+                  Estudiante de 5 quinto semestre de Ingeniería en Computación de la Facultad de Ingeniería de la UNAM. Administrador de servidores Linux con conocimientos en MySQL, Apache, GNU/Linux y PHP.
+              </p>
+              <div class="container-lista">
+                <ul> 
+                  <li>Gusto musical en regueton, trap y pop</li>
+                  <li>Gusto por el futbol (Barcelona y América)</li>
+                </ul>
+              </div>
+              
+          </div>
+
+          <div>
+              <img src="{% static 'img/musica.png' %}" alt="Musica">
+          </div>
+          <div style="margin-top: 15px;">
+            <img src="{% static 'img/barcelona.png' %}" alt="Barcelona">
+        </div>
+      </ul>
+
+      <ul>
+        <h2 style="text-align: center;">Meneses Mercado Alejandro</h2>
+        <div>
+            <p>
+                Estudiante de Ingeniería en Computación de la Facultad de Ingeniería de la UNAM. Diseñador web responsive y administrador de bases de datos MySQL.
+            </p>
+            <div class="container-lista">
+              <ul> 
+                <li>Gusto por la música (The Weeknd, Coldplay)</li>
+                <li>Gusto por los deportes (Formula 1)</li>
+                <li>Gusto por las series (Breaking Bad, Better Call Saul)</li>
+              </ul>
+            </div>
+            
+        </div>
+
+        <div>
+            <img src="{% static 'img/conductor.png' %}" alt="Formula 1">
+        </div>
+        <div style="margin-top: 15px;">
+          <img src="{% static 'img/breakingBad.png' %}" alt="Breaking Bad">
+      </div>
+    </ul>
+
+
+    <ul>
+      <h2 style="text-align: center;">Gajardo Rodriguez Daniel</h2>
+      <div>
+          <p>
+              Estudiante de Ingeniería en Computación de la Facultad de Ingeniería de la UNAM. Diseñador UI/UX encargado de la experiencia del usuario y QA para el control de calidad.
+          </p>
+          <div class="container-lista">
+            <ul> 
+              <li>Gusto por la música rock (Tool)</li>
+              <li>Gusto por las películas (Planeta de los simios)</li>
+            </ul>
+          </div>
+          
+      </div>
+
+      <div>
+          <img src="{% static 'img/movie.png' %}" alt="Pelicula">
+      </div>
+      <div style="margin-top: 15px;">
+        <img src="{% static 'img/rock.png' %}" alt="Rock">
+    </div>
+  </ul>
+
+    </div>
+
+
+    {% endblock %}
