@@ -18,7 +18,7 @@
 
     <div class="contenedor-algoritmo-grid" id="contenedor_algoritmo">
 
-        <div class="cardGrid">
+        <div class="cardGrid" style="display: {{displaySeleccion}};">
             <div>
                 <h2>Mapa de calor</h2>
             </div>
@@ -27,26 +27,69 @@
             </div>
         </div>
 
-        <div class="cardGrid">
+        <div class="cardGrid-scroll" style="display: {{displaySeleccion}};">
             <div>
                 <h2>Datos metricas</h2>
             </div>
-            <h3>Por aclarar...</h3>
+            <h3>Selección de características</h3>
+            <div class="containerFormularioMetricasSeleccion">    <!-- containerFormularioApriori -->
+                <form class="cardFormMetricas" action="" method="post" id="form-seleccion-carac">
+                    {% csrf_token %}
+                    <div class="contenedor-form-metricas">      <!--  contenedor-form-ap  -->
+
+                        {% for columna in listaColumnas %}
+                            <div class="linea">
+                                <input type="checkbox" id="id_{{ columna }}" name="name_{{ columna }}" value="{{ columna }}">
+                                <label for="id_{{ columna }}"> {{ columna }}</label>
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+                    <input type="hidden" name="form-tipo" value="form-seleccion-carac">
+
+                    <label for="seleccion-carac" class="custom-file-form-ap">Enviar -></label>
+                    <input class="boton-centro" type="submit" name="form-seleccion-carac" value="form-seleccion-carac" id="seleccion-carac" >
+                    
+                </form>
+            </div>
             
         </div>
 
 
-        <div id="ejecucion-algoritmo" class="cardGrid-scroll elemento-abajo contenedor-ejecucion" style="display: {{display}}">
+        <div id="ejecucion-algoritmo" class="cardGrid-scroll elemento-abajo" style="display: {{display}}">
             
 
-            <h2>Otra funcion</h2>
-            <h3>Por aclarar...</h3>
+            <h2>Matriz de distancia</h2>
+            <h3>Euclidiana</h3>
+
+            <p style="margin-top: 20px;">Se muestra solo una parte de la Matriz de Distancias (cinco objetos) para mayor comodidad visual (la Matriz completa cuenta con miles de objetos).</p>
 
 
+            <div class="tabla-matriz">
+                <table>
+                    <tr>
+                      {% for col in dataFrame.columns %}
+                        <td>
+                          {{col}}
+                        </td>
+                      {% endfor %}
+                    </tr>
+                      {% for index, row in dataFrame.iterrows %}
+                        <tr>
+                          {% for cell in row %}
+                            <td>
+                              {{cell}}
+                            </td>
+                          {% endfor %}
+                        </tr>
+                      {% endfor %}
+                </table>
+            </div>
             
         </div>
 
-        <div class="cardGrid elemento-abajo">
+        <div class="cardGrid elemento-abajo" style="display: {{display}}">
             <h2>Opciones</h2>
             <h3>Opciones por aclarar</h3>
             

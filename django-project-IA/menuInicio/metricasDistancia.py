@@ -6,6 +6,10 @@ import numpy as np                          # Para crear vectores y matrices n d
 import matplotlib.pyplot as plt             # Para generar gráficas a partir de los datos
 import seaborn as sns                       
 from scipy.spatial import distance
+from scipy.spatial.distance import cdist    # Para el cálculo de distancias
+
+#para estandarizar los datos
+from sklearn.preprocessing import StandardScaler, MinMaxScaler  
 
 import os
 import json
@@ -21,13 +25,39 @@ class metricasDistancia:
         self.listaResultados = []
         self.matrizInf = []
         self.datosDF = {}
+        self.datosColumnas = []  #lista
+        self.datosDataFrameFiltrados = pd.DataFrame()  #data frame de la matriz de datos filtrados
+        self.datosMatrizEuclidiana = pd.DataFrame()
 
     def mapaCalor(self): 
         directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/'+self.nombreArchivo)
-        DatosLeidos = pd.read_csv(directorio)
+        self.datosDataFrameFiltrados = pd.read_csv(directorio)
         # Se otbiene la matriz de correlaciones entre variables
-        self.datosDF = DatosLeidos.corr()
+        self.datosDF = self.datosDataFrameFiltrados.corr()
         self.matrizInf = np.triu(self.datosDF)
+        self.datosColumnas = list(self.datosDataFrameFiltrados.columns)
+
+        return self
+
+    def filtrarDatos(self, listaCaracteristicas):
+        #List1 = ['Homer',  'Bart', 'Lisa', 'Maggie', 'Lisa']
+        #List2 = ['Bart', 'Homer', 'Lisa']
+
+        check = all(item in self.datosColumnas for item in listaCaracteristicas)
+        if check is True:
+            self.datosDataFrameFiltrados = self.datosDataFrameFiltrados.drop(columns=listaCaracteristicas)
+            estandarizar = StandardScaler()                               # Se instancia el objeto StandardScaler o MinMaxScaler 
+            MEstandarizada = estandarizar.fit_transform(self.datosDataFrameFiltrados)         # Se calculan la media y desviación y se escalan los datos
+            self.datosDataFrameFiltrados = pd.DataFrame(MEstandarizada)
+
+        self.datosColumnas = list(self.datosDataFrameFiltrados.columns)
+
+        return self
+
+    def mostrarMatrizEuclidiana(self):
+        DstEuclidiana = cdist(self.datosDataFrameFiltrados[0:5], self.datosDataFrameFiltrados[0:5], metric='euclidean')  #ddist de la biblioteca Spatial.distance
+        #dos veces la matriz para hacer el cálculo con valores diferentes de la misma matriz
+        self.datosMatrizEuclidiana = pd.DataFrame(DstEuclidiana)
 
         return self
 

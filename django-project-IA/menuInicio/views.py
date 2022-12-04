@@ -269,25 +269,81 @@ def validacionMetricasDistancia(request):
 
             return render(request, 'views/metricas/metricasDistancia.html', {
                 'mapaCalor':mapaCalorGenerado,
+                'listaColumnas':objetoMetricas.datosColumnas,
+                'displaySeleccion':"block",
+                'display':"none",
             })
             #return HttpResponseRedirect(reverse('apriori-algoritmo'))
     else:
 
 
         if request.method == 'GET':
-            return render(request, 'views/metricas/metricasDistancia.html')
+            mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
+            return render(request, 'views/metricas/metricasDistancia.html', {
+                'mapaCalor':mapaCalorGenerado,
+                'listaColumnas':objetoMetricas.datosColumnas,
+                'displaySeleccion':"block",
+                'display':"none",
+            })
+            #return render(request, 'views/metricas/metricasDistancia.html')
             #return HttpResponseRedirect(reverse('apriori-algoritmo'))
         else: 
-            """Cambiar todo esto"""
+            
+            if request.POST["form-tipo"] == 'form-seleccion-carac':
+                """Con todo esto me di cuenta de que en el form sin seleccionar casillas, se tienen tres elementos unicamente"""
+                """
+                print()
+                print()
+                print(len(request.POST))
+                print(request.POST)
+                print()
+                print() """
 
-
-            #if 'form-ejecucion' in request.POST:
-            if request.POST["form-tipo"] == 'form-ejecucion':
-                if(request.POST["soporte"]=="" or request.POST["confianza"]=="" or request.POST["elevacion"]==""):
-                    return render(request, 'views/associationRules.html')
-                    #return HttpResponseRedirect(reverse('apriori-algoritmo'))
+                #si no se seleccionó alguna caracteristica, se vuelve a preguntar
+                if(len(request.POST) <= 3):
+                    mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
+                    print()
+                    print("Se vuelve a preguntar por las caracteristicas")
+                    print()
+                    return render(request, 'views/metricas/metricasDistancia.html', {
+                        'mapaCalor':mapaCalorGenerado,
+                        'listaColumnas':objetoMetricas.datosColumnas,
+                        'displaySeleccion':"block",
+                        'display':"none",
+                    })
                 else:
+                    print()
+                    print("Se procesan las características")
+                    print()
+
+                    diccionarioCaracteristicas = request.POST
+                    listaCaracteristicas = []
+                    tamanioDiccionario = len(request.POST)
+
+                    for key in diccionarioCaracteristicas:
+                        listaCaracteristicas.append(diccionarioCaracteristicas[key])
+
+                    tamanioLista = tamanioDiccionario - 2
+                    listaCaracteristicas = listaCaracteristicas[1:tamanioLista]
+                    print(listaCaracteristicas)
+                    print()
+
+                    #eliminar las características
+                    objetoMetricas = objetoMetricas.filtrarDatos(listaCaracteristicas)
+                    objetoMetricas = objetoMetricas.mostrarMatrizEuclidiana()
                     
+                    #aquí se ha seleccionado alguna característica
+                    mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
+                    return render(request, 'views/metricas/metricasDistancia.html', {
+                        'mapaCalor':mapaCalorGenerado,
+                        'listaColumnas':objetoMetricas.datosColumnas,
+                        'displaySeleccion':"none",
+                        'display':"block",
+                        'dataFrame':objetoMetricas.datosMatrizEuclidiana,
+                    })
+
+
+
                     soporte = float(request.POST["soporte"])
                     confianza = float(request.POST["confianza"])
                     elevacion = float(request.POST["elevacion"])

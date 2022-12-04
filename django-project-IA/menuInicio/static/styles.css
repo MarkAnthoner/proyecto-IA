@@ -575,6 +575,88 @@ input[type="number"] {
 
 
 
+/* METRICAS FORMULARIO DE SELECCION DE CARACTERISTICAS*/
+
+
+.containerFormularioMetricasSeleccion{
+  margin: auto;
+  margin-top: 10px;
+  width: 100%;
+  height: 80%;
+}
+
+.containerFormularioMetricasSeleccion .cardFormMetricas{
+  margin: auto;
+  margin-top: 20px;
+  width: 80%;
+  height: 90%;
+  border-radius: 8px;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  text-align: center;
+  transition: all 0.25s;
+  padding: 10%;
+  overflow-y: scroll;
+}
+
+.containerFormularioMetricasSeleccion .cardFormMetricas:hover{
+  transform: translateY(-15px);
+  box-shadow: 0 12px 16px rgba(0, 0, 0, 0.2);
+}
+
+
+.contenedor-form-metricas{
+  margin: auto;
+  margin-top: -15px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;;
+  margin-bottom: 10px;
+}
+
+.contenedor-form-metricas .linea{
+  display: inline-block;
+  text-align: left;
+  margin-left: 55px;
+}
+
+.containerFormularioMetricasSeleccion .cardFormMetricas label{
+  width: 75%;
+}
+
+.containerFormularioMetricasSeleccion .cardFormMetricas input{
+  width: 20%;
+  background-color: #ecececb8;
+}
+
+
+input[type="submit"] {
+  display: none;
+}
+
+/*  Métricas: Matriz de datos Euclidianos  */
+
+
+.contenedor-algoritmo-grid .cardGrid-scroll .tabla-matriz{
+  margin: auto;
+  margin-top: 30px;
+}
+
+.contenedor-algoritmo-grid .cardGrid-scroll .tabla-matriz table, th, td {
+  border: 1px solid;
+  width: 80%;
+  margin: auto;
+  font-size: 15px;
+}
+
+
+
+
+
+
+
+
+
 
 
 
