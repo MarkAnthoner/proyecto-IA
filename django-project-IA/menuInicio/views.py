@@ -38,6 +38,10 @@ import seaborn as sns
 from scipy.spatial import distance
 
 
+#import de clustering
+from .clustering import clustering
+
+
 
 # Create your views here.
 
@@ -53,6 +57,14 @@ lista = []
 variableNombreMetricas = ""
 objetoMetricas = metricasDistancia(variableNombreMetricas)
 accesoValidadoMetricas = False
+pantallaMatrices = False
+
+
+
+#variables globales de Clustering
+variableNombreClustering = ""
+objetoClustering = clustering(variableNombreClustering)
+accesoValidadoClustering = False
 
 
 
@@ -233,6 +245,7 @@ def validacionMetricasDistancia(request):
     global accesoValidadoMetricas
     global variableNombreMetricas
     global objetoMetricas
+    global pantallaMatrices
 
     if(accesoValidadoMetricas == False):
         #no se ha validado el dataset, entonces se redirige a la vista de subir archivo
@@ -278,15 +291,32 @@ def validacionMetricasDistancia(request):
 
 
         if request.method == 'GET':
-            mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
-            return render(request, 'views/metricas/metricasDistancia.html', {
-                'mapaCalor':mapaCalorGenerado,
-                'listaColumnas':objetoMetricas.datosColumnas,
-                'displaySeleccion':"block",
-                'display':"none",
-            })
-            #return render(request, 'views/metricas/metricasDistancia.html')
-            #return HttpResponseRedirect(reverse('apriori-algoritmo'))
+            if pantallaMatrices == True:
+                print("CUando se esté en la pantalla de subir objetos, y no se ingrese correctamente")
+                #aquí se ha seleccionado alguna característica
+                mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
+                return render(request, 'views/metricas/metricasDistancia.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoMetricas.datosColumnas,
+                    'displaySeleccion':"none",
+                    'display':"block",
+                    'dataFrameEuclidiana':objetoMetricas.datosMatrizEuclidiana,
+                    'dataFrameChevyshev':objetoMetricas.datosMatrizChevyshev,
+                    'dataFrameManhattan':objetoMetricas.datosMatrizManhattan,
+                    'dataFrameMinkowski':objetoMetricas.datosMatrizMinkowski,
+                    'numeroObjetos': objetoMetricas.numeroObjetosMatriz,
+                })
+
+            else:
+                mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
+                return render(request, 'views/metricas/metricasDistancia.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoMetricas.datosColumnas,
+                    'displaySeleccion':"block",
+                    'display':"none",
+                })
+                #return render(request, 'views/metricas/metricasDistancia.html')
+                #return HttpResponseRedirect(reverse('apriori-algoritmo'))
         else: 
             
             if request.POST["form-tipo"] == 'form-seleccion-carac':
@@ -316,6 +346,8 @@ def validacionMetricasDistancia(request):
                     print("Se procesan las características")
                     print()
 
+                    pantallaMatrices = True
+
                     diccionarioCaracteristicas = request.POST
                     listaCaracteristicas = []
                     tamanioDiccionario = len(request.POST)
@@ -323,6 +355,7 @@ def validacionMetricasDistancia(request):
                     for key in diccionarioCaracteristicas:
                         listaCaracteristicas.append(diccionarioCaracteristicas[key])
 
+                    #solo se toman las características seleccionadas
                     tamanioLista = tamanioDiccionario - 2
                     listaCaracteristicas = listaCaracteristicas[1:tamanioLista]
                     print(listaCaracteristicas)
@@ -330,7 +363,13 @@ def validacionMetricasDistancia(request):
 
                     #eliminar las características
                     objetoMetricas = objetoMetricas.filtrarDatos(listaCaracteristicas)
+
+                    #obtener las matrices de distancias parciales
                     objetoMetricas = objetoMetricas.mostrarMatrizEuclidiana()
+                    objetoMetricas = objetoMetricas.mostrarMatrizChevyshev()
+                    objetoMetricas = objetoMetricas.mostrarMatrizManhattan()
+                    objetoMetricas = objetoMetricas.mostrarMatrizMinkowski()
+
                     
                     #aquí se ha seleccionado alguna característica
                     mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
@@ -339,30 +378,14 @@ def validacionMetricasDistancia(request):
                         'listaColumnas':objetoMetricas.datosColumnas,
                         'displaySeleccion':"none",
                         'display':"block",
-                        'dataFrame':objetoMetricas.datosMatrizEuclidiana,
+                        'dataFrameEuclidiana':objetoMetricas.datosMatrizEuclidiana,
+                        'dataFrameChevyshev':objetoMetricas.datosMatrizChevyshev,
+                        'dataFrameManhattan':objetoMetricas.datosMatrizManhattan,
+                        'dataFrameMinkowski':objetoMetricas.datosMatrizMinkowski,
+                        'numeroObjetos': objetoMetricas.numeroObjetosMatriz,
                     })
 
 
-
-                    soporte = float(request.POST["soporte"])
-                    confianza = float(request.POST["confianza"])
-                    elevacion = float(request.POST["elevacion"])
-
-                    
-                    objetoApriori = AprioriAlgorithm(variableNombreApriori, soporte, confianza, elevacion)
-                    objetoApriori = objetoApriori.accionReglasAsoc()
-                    objetoApriori = objetoApriori.accion()
-                    #lista = AprioriAlgorithm(variableNombreApriori, soporte, confianza, elevacion)
-
-                    #global lista
-                    lista = objetoApriori.listaResultados
-                    print(request.POST["form-tipo"])
-
-                    #lista = [1,2,3,4,5,6,7,8,9,10]
-                    return render(request, 'views/associationRules.html', {
-                        'list':lista,
-                        'display':'block'
-                    })
             #elif 'form-reporte' in request.POST:
             elif request.POST["form-tipo"] == 'form-reporte':
                 """Logica de generacion de reporte"""
@@ -371,31 +394,119 @@ def validacionMetricasDistancia(request):
                 return render(request, 'views/associationRules.html', {
                         'list':lista,
                         'display':'block',
-                        'muestraReporte':'block'
+                        'muestraReporte':'block',
                     })
+
+            elif request.POST["form-tipo"] == 'form-matriz-euclidiana':
+                """Logica de la generacion de distancia euclidiana"""
+
+                #se obtiene la distancia Euclidiana
+
+                #el nombre de la variable en POST es el "name" del formulario
+                valorObjeto1 = int(request.POST["name_valor1"])
+                valorObjeto2 = int(request.POST["name_valor2"])
+                objetoMetricas = objetoMetricas.calcularDistanciaObjetosEuclidiana(valorObjeto1, valorObjeto2)
+
+                
+                #aquí se ha seleccionado alguna característica
+                mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
+                return render(request, 'views/metricas/metricasDistancia.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoMetricas.datosColumnas,
+                    'displaySeleccion':"none",
+                    'display':"block",
+                    'dataFrameEuclidiana':objetoMetricas.datosMatrizEuclidiana,
+                    'dataFrameChevyshev':objetoMetricas.datosMatrizChevyshev,
+                    'dataFrameManhattan':objetoMetricas.datosMatrizManhattan,
+                    'dataFrameMinkowski':objetoMetricas.datosMatrizMinkowski,
+                    'numeroObjetos': objetoMetricas.numeroObjetosMatriz,
+                    'distanciaObjetosEuclidiana': objetoMetricas.distanciaObjetosEuclidiana,
+                    'objetoEu1':valorObjeto1,
+                    'objetoEu2':valorObjeto2,
+                    'hayDistancia':"Euclidiana",
+                })
+
+            elif request.POST["form-tipo"] == 'form-matriz-chevyshev':
+                """Logica de la generacion de distancia chevyshev"""
+
+                #el nombre de la variable en POST es el "name" del formulario
+                valorObjeto1 = int(request.POST["name_valor1"])
+                valorObjeto2 = int(request.POST["name_valor2"])
+                objetoMetricas = objetoMetricas.calcularDistanciaObjetosChevyshev(valorObjeto1, valorObjeto2)
+
+                
+                #aquí se ha seleccionado alguna característica
+                mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
+                return render(request, 'views/metricas/metricasDistancia.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoMetricas.datosColumnas,
+                    'displaySeleccion':"none",
+                    'display':"block",
+                    'dataFrameEuclidiana':objetoMetricas.datosMatrizEuclidiana,
+                    'dataFrameChevyshev':objetoMetricas.datosMatrizChevyshev,
+                    'dataFrameManhattan':objetoMetricas.datosMatrizManhattan,
+                    'dataFrameMinkowski':objetoMetricas.datosMatrizMinkowski,
+                    'numeroObjetos': objetoMetricas.numeroObjetosMatriz,
+                    'distanciaObjetosChevyshev': objetoMetricas.distanciaObjetosChevyshev,
+                    'objetoCh1':valorObjeto1,
+                    'objetoCh2':valorObjeto2,
+                    'hayDistancia':"Chevyshev",
+                })
+            elif request.POST["form-tipo"] == 'form-matriz-manhattan':
+                """Logica de la generacion de distancia manhattan"""
+
+                #el nombre de la variable en POST es el "name" del formulario
+                valorObjeto1 = int(request.POST["name_valor1"])
+                valorObjeto2 = int(request.POST["name_valor2"])
+                objetoMetricas = objetoMetricas.calcularDistanciaObjetosManhattan(valorObjeto1, valorObjeto2)
+
+                
+                #aquí se ha seleccionado alguna característica
+                mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
+                return render(request, 'views/metricas/metricasDistancia.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoMetricas.datosColumnas,
+                    'displaySeleccion':"none",
+                    'display':"block",
+                    'dataFrameEuclidiana':objetoMetricas.datosMatrizEuclidiana,
+                    'dataFrameChevyshev':objetoMetricas.datosMatrizChevyshev,
+                    'dataFrameManhattan':objetoMetricas.datosMatrizManhattan,
+                    'dataFrameMinkowski':objetoMetricas.datosMatrizMinkowski,
+                    'numeroObjetos': objetoMetricas.numeroObjetosMatriz,
+                    'distanciaObjetosManhattan': objetoMetricas.distanciaObjetosManhattan,
+                    'objetoMan1':valorObjeto1,
+                    'objetoMan2':valorObjeto2,
+                    'hayDistancia':"Manhattan",
+                })
+            elif request.POST["form-tipo"] == 'form-matriz-minkowski':
+                """Logica de la generacion de distancia minkowski"""
+
+                #el nombre de la variable en POST es el "name" del formulario
+                valorObjeto1 = int(request.POST["name_valor1"])
+                valorObjeto2 = int(request.POST["name_valor2"])
+                objetoMetricas = objetoMetricas.calcularDistanciaObjetosMinkowski(valorObjeto1, valorObjeto2)
+
+                
+                #aquí se ha seleccionado alguna característica
+                mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
+                return render(request, 'views/metricas/metricasDistancia.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoMetricas.datosColumnas,
+                    'displaySeleccion':"none",
+                    'display':"block",
+                    'dataFrameEuclidiana':objetoMetricas.datosMatrizEuclidiana,
+                    'dataFrameChevyshev':objetoMetricas.datosMatrizChevyshev,
+                    'dataFrameManhattan':objetoMetricas.datosMatrizManhattan,
+                    'dataFrameMinkowski':objetoMetricas.datosMatrizMinkowski,
+                    'numeroObjetos': objetoMetricas.numeroObjetosMatriz,
+                    'distanciaObjetosMinkowski': objetoMetricas.distanciaObjetosMinkowski,
+                    'objetoMin1':valorObjeto1,
+                    'objetoMin2':valorObjeto2,
+                    'hayDistancia':"Minkowski",
+                })
                 
 
-
-
-
-        #se imprime el directorio actual
-        #print(  os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/')  )
-
-        #se guarda el directorio actual para validar que se haya subido un archivo csv
-        direccion = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/')
-
-        #si sí se subió un csv antes, se redirije al algoritmo apriori
-        if any(File.endswith(".csv") for File in os.listdir( direccion )):
-            #return render(request, 'views/associationRules.html')
-
-            accesoValidadoApriori = True
-            return render(request, 'views/metricasDistancia.html')
-            #return HttpResponseRedirect(reverse('apriori-algoritmo'))
-        else:
-            #return HttpResponseRedirect(resolve('views/subirApriori.html'))
-            #return HttpResponseRedirect(reverse('apriori-subir'))
-            return render(request, 'views/subirMetricas.html')
-    return render(request, 'index.html')
+            return 0
 
 def eliminarDataSetMetricas(request):
     global accesoValidadoMetricas
@@ -428,6 +539,292 @@ def generarMapaMetricas(matrizInferior, datosCorrelacionados):
     graphic = graphic.decode('utf-8')
 
     return graphic
+
+
+
+
+"""Clustering"""
+def validacionClustering(request):
+    global accesoValidadoClustering
+    global variableNombreClustering
+    global objetoClustering
+
+    if(accesoValidadoClustering == False):
+        #no se ha validado el dataset, entonces se redirige a la vista de subir archivo
+        if request.method == 'GET':
+            accesoValidadoClustering = False
+            return render(request, 'views/clustering/subirClustering.html')
+        else: 
+            myfile = request.FILES['archivo-clustering']
+            fs = FileSystemStorage()
+
+            nombreArchivo = myfile.name
+            global variableNombreClustering
+            variableNombreClustering = nombreArchivo
+
+            #se pone el directorio completo
+            directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/clustering/'+nombreArchivo)
+
+            #se coloca el directorio y el nombre del archivo
+            filename = fs.save(directorio, myfile)
+            uploaded_file_url = fs.url(filename)
+
+
+            global objetoClustering
+            objetoClustering = clustering(variableNombreClustering)
+            #generamos la matriz inferior
+            objetoClustering = objetoClustering.mapaCalor()
+
+            accesoValidadoClustering = True
+
+            """Poner parte de la impresion en pantalla"""
+            #llamamos al metodo de este archivo que genera el grafico tomando la matriz inferior
+            mapaCalorGenerado = generarMapaMetricas(objetoClustering.matrizInf, objetoClustering.datosDF)
+
+
+            return render(request, 'views/clustering/clustering.html', {
+                'mapaCalor':mapaCalorGenerado,
+                'listaColumnas':objetoClustering.datosColumnas,
+                'displaySeleccion':"block",
+                'display':"none",
+            })
+            #return HttpResponseRedirect(reverse('apriori-algoritmo'))
+    else:
+
+
+        if request.method == 'GET':
+            if pantallaMatrices == True:
+                print("CUando se esté en la pantalla de subir objetos, y no se ingrese correctamente")
+                #aquí se ha seleccionado alguna característica
+                mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
+                return render(request, 'views/metricas/metricasDistancia.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoMetricas.datosColumnas,
+                    'displaySeleccion':"none",
+                    'display':"block",
+                    'dataFrameEuclidiana':objetoMetricas.datosMatrizEuclidiana,
+                    'dataFrameChevyshev':objetoMetricas.datosMatrizChevyshev,
+                    'dataFrameManhattan':objetoMetricas.datosMatrizManhattan,
+                    'dataFrameMinkowski':objetoMetricas.datosMatrizMinkowski,
+                    'numeroObjetos': objetoMetricas.numeroObjetosMatriz,
+                })
+
+            else:
+                mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
+                return render(request, 'views/metricas/metricasDistancia.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoMetricas.datosColumnas,
+                    'displaySeleccion':"block",
+                    'display':"none",
+                })
+                #return render(request, 'views/metricas/metricasDistancia.html')
+                #return HttpResponseRedirect(reverse('apriori-algoritmo'))
+        else: 
+            
+            if request.POST["form-tipo"] == 'form-seleccion-carac':
+                """Con todo esto me di cuenta de que en el form sin seleccionar casillas, se tienen tres elementos unicamente"""
+                """
+                print()
+                print()
+                print(len(request.POST))
+                print(request.POST)
+                print()
+                print() """
+
+                #si no se seleccionó alguna caracteristica, se vuelve a preguntar
+                if(len(request.POST) <= 3):
+                    mapaCalorGenerado = generarMapaMetricas(objetoClustering.matrizInf, objetoClustering.datosDF)
+                    print()
+                    print("Se vuelve a preguntar por las caracteristicas")
+                    print()
+                    return render(request, 'views/clustering/clustering.html', {
+                        'mapaCalor':mapaCalorGenerado,
+                        'listaColumnas':objetoClustering.datosColumnas,
+                        'displaySeleccion':"block",
+                        'display':"none",
+                    })
+                else:
+                    print()
+                    print("Se procesan las características")
+                    print()
+
+                    pantallaMatrices = True
+
+                    diccionarioCaracteristicas = request.POST
+                    listaCaracteristicas = []
+                    tamanioDiccionario = len(request.POST)
+
+                    for key in diccionarioCaracteristicas:
+                        listaCaracteristicas.append(diccionarioCaracteristicas[key])
+
+                    #solo se toman las características seleccionadas
+                    tamanioLista = tamanioDiccionario - 2
+                    listaCaracteristicas = listaCaracteristicas[1:tamanioLista]
+                    print(listaCaracteristicas)
+                    print()
+
+                    #eliminar las características
+                    objetoClustering = objetoClustering.filtrarDatos(listaCaracteristicas)
+
+
+                    """HASTA ESTE PUNTO, LO ANTERIOR ES LO MISMO QUE EN MÉTRICAS"""
+                    #obtener las matrices de distancias parciales
+                    objetoClustering = objetoMetricas.mostrarMatrizEuclidiana()
+                    objetoClustering = objetoMetricas.mostrarMatrizChevyshev()
+                    objetoMetricas = objetoMetricas.mostrarMatrizManhattan()
+                    objetoMetricas = objetoMetricas.mostrarMatrizMinkowski()
+
+                    
+                    #aquí se ha seleccionado alguna característica
+                    mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
+                    return render(request, 'views/metricas/metricasDistancia.html', {
+                        'mapaCalor':mapaCalorGenerado,
+                        'listaColumnas':objetoMetricas.datosColumnas,
+                        'displaySeleccion':"none",
+                        'display':"block",
+                        'dataFrameEuclidiana':objetoMetricas.datosMatrizEuclidiana,
+                        'dataFrameChevyshev':objetoMetricas.datosMatrizChevyshev,
+                        'dataFrameManhattan':objetoMetricas.datosMatrizManhattan,
+                        'dataFrameMinkowski':objetoMetricas.datosMatrizMinkowski,
+                        'numeroObjetos': objetoMetricas.numeroObjetosMatriz,
+                    })
+
+
+            #elif 'form-reporte' in request.POST:
+            elif request.POST["form-tipo"] == 'form-reporte':
+                """Logica de generacion de reporte"""
+                print("Se genera reporte")
+                #global lista
+                return render(request, 'views/associationRules.html', {
+                        'list':lista,
+                        'display':'block',
+                        'muestraReporte':'block',
+                    })
+
+            elif request.POST["form-tipo"] == 'form-matriz-euclidiana':
+                """Logica de la generacion de distancia euclidiana"""
+
+                #se obtiene la distancia Euclidiana
+
+                #el nombre de la variable en POST es el "name" del formulario
+                valorObjeto1 = int(request.POST["name_valor1"])
+                valorObjeto2 = int(request.POST["name_valor2"])
+                objetoMetricas = objetoMetricas.calcularDistanciaObjetosEuclidiana(valorObjeto1, valorObjeto2)
+
+                
+                #aquí se ha seleccionado alguna característica
+                mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
+                return render(request, 'views/metricas/metricasDistancia.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoMetricas.datosColumnas,
+                    'displaySeleccion':"none",
+                    'display':"block",
+                    'dataFrameEuclidiana':objetoMetricas.datosMatrizEuclidiana,
+                    'dataFrameChevyshev':objetoMetricas.datosMatrizChevyshev,
+                    'dataFrameManhattan':objetoMetricas.datosMatrizManhattan,
+                    'dataFrameMinkowski':objetoMetricas.datosMatrizMinkowski,
+                    'numeroObjetos': objetoMetricas.numeroObjetosMatriz,
+                    'distanciaObjetosEuclidiana': objetoMetricas.distanciaObjetosEuclidiana,
+                    'objetoEu1':valorObjeto1,
+                    'objetoEu2':valorObjeto2,
+                    'hayDistancia':"Euclidiana",
+                })
+
+            elif request.POST["form-tipo"] == 'form-matriz-chevyshev':
+                """Logica de la generacion de distancia chevyshev"""
+
+                #el nombre de la variable en POST es el "name" del formulario
+                valorObjeto1 = int(request.POST["name_valor1"])
+                valorObjeto2 = int(request.POST["name_valor2"])
+                objetoMetricas = objetoMetricas.calcularDistanciaObjetosChevyshev(valorObjeto1, valorObjeto2)
+
+                
+                #aquí se ha seleccionado alguna característica
+                mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
+                return render(request, 'views/metricas/metricasDistancia.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoMetricas.datosColumnas,
+                    'displaySeleccion':"none",
+                    'display':"block",
+                    'dataFrameEuclidiana':objetoMetricas.datosMatrizEuclidiana,
+                    'dataFrameChevyshev':objetoMetricas.datosMatrizChevyshev,
+                    'dataFrameManhattan':objetoMetricas.datosMatrizManhattan,
+                    'dataFrameMinkowski':objetoMetricas.datosMatrizMinkowski,
+                    'numeroObjetos': objetoMetricas.numeroObjetosMatriz,
+                    'distanciaObjetosChevyshev': objetoMetricas.distanciaObjetosChevyshev,
+                    'objetoCh1':valorObjeto1,
+                    'objetoCh2':valorObjeto2,
+                    'hayDistancia':"Chevyshev",
+                })
+            elif request.POST["form-tipo"] == 'form-matriz-manhattan':
+                """Logica de la generacion de distancia manhattan"""
+
+                #el nombre de la variable en POST es el "name" del formulario
+                valorObjeto1 = int(request.POST["name_valor1"])
+                valorObjeto2 = int(request.POST["name_valor2"])
+                objetoMetricas = objetoMetricas.calcularDistanciaObjetosManhattan(valorObjeto1, valorObjeto2)
+
+                
+                #aquí se ha seleccionado alguna característica
+                mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
+                return render(request, 'views/metricas/metricasDistancia.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoMetricas.datosColumnas,
+                    'displaySeleccion':"none",
+                    'display':"block",
+                    'dataFrameEuclidiana':objetoMetricas.datosMatrizEuclidiana,
+                    'dataFrameChevyshev':objetoMetricas.datosMatrizChevyshev,
+                    'dataFrameManhattan':objetoMetricas.datosMatrizManhattan,
+                    'dataFrameMinkowski':objetoMetricas.datosMatrizMinkowski,
+                    'numeroObjetos': objetoMetricas.numeroObjetosMatriz,
+                    'distanciaObjetosManhattan': objetoMetricas.distanciaObjetosManhattan,
+                    'objetoMan1':valorObjeto1,
+                    'objetoMan2':valorObjeto2,
+                    'hayDistancia':"Manhattan",
+                })
+            elif request.POST["form-tipo"] == 'form-matriz-minkowski':
+                """Logica de la generacion de distancia minkowski"""
+
+                #el nombre de la variable en POST es el "name" del formulario
+                valorObjeto1 = int(request.POST["name_valor1"])
+                valorObjeto2 = int(request.POST["name_valor2"])
+                objetoMetricas = objetoMetricas.calcularDistanciaObjetosMinkowski(valorObjeto1, valorObjeto2)
+
+                
+                #aquí se ha seleccionado alguna característica
+                mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
+                return render(request, 'views/metricas/metricasDistancia.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoMetricas.datosColumnas,
+                    'displaySeleccion':"none",
+                    'display':"block",
+                    'dataFrameEuclidiana':objetoMetricas.datosMatrizEuclidiana,
+                    'dataFrameChevyshev':objetoMetricas.datosMatrizChevyshev,
+                    'dataFrameManhattan':objetoMetricas.datosMatrizManhattan,
+                    'dataFrameMinkowski':objetoMetricas.datosMatrizMinkowski,
+                    'numeroObjetos': objetoMetricas.numeroObjetosMatriz,
+                    'distanciaObjetosMinkowski': objetoMetricas.distanciaObjetosMinkowski,
+                    'objetoMin1':valorObjeto1,
+                    'objetoMin2':valorObjeto2,
+                    'hayDistancia':"Minkowski",
+                })
+                
+
+            return 0
+
+
+def eliminarDataSetClustering(request):
+    global accesoValidadoClustering
+    if(accesoValidadoClustering == True):
+        accesoValidadoClustering = False
+
+        """#Falta agregar logica de eliminar archivo CSV"""
+        #return render(request, 'views/subirApriori.html')
+        return HttpResponseRedirect(reverse('index'))
+    else:
+        #si el acceso ya no es validado, se manda directamente al inicio
+        accesoValidadoClustering = False
+        return render(request, 'views/clustering/subirClustering.html')
 
 
 

@@ -27,11 +27,26 @@ class metricasDistancia:
         self.datosDF = {}
         self.datosColumnas = []  #lista
         self.datosDataFrameFiltrados = pd.DataFrame()  #data frame de la matriz de datos filtrados
+
+        self.datosEstandarizados = []#no dataframe
+
+        #matrices recortadas para imprimir
         self.datosMatrizEuclidiana = pd.DataFrame()
+        self.datosMatrizChevyshev = pd.DataFrame()        
+        self.datosMatrizManhattan = pd.DataFrame() 
+        self.datosMatrizMinkowski = pd.DataFrame()
+
+
+        self.numeroObjetosMatriz = 0
+        self.distanciaObjetosEuclidiana = 0
+        self.distanciaObjetosChevyshev = 0
+        self.distanciaObjetosManhattan = 0
+        self.distanciaObjetosMinkowski = 0
 
     def mapaCalor(self): 
         directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/'+self.nombreArchivo)
         self.datosDataFrameFiltrados = pd.read_csv(directorio)
+        self.numeroObjetosMatriz = len(self.datosDataFrameFiltrados)-1
         # Se otbiene la matriz de correlaciones entre variables
         self.datosDF = self.datosDataFrameFiltrados.corr()
         self.matrizInf = np.triu(self.datosDF)
@@ -49,64 +64,66 @@ class metricasDistancia:
             estandarizar = StandardScaler()                               # Se instancia el objeto StandardScaler o MinMaxScaler 
             MEstandarizada = estandarizar.fit_transform(self.datosDataFrameFiltrados)         # Se calculan la media y desviación y se escalan los datos
             self.datosDataFrameFiltrados = pd.DataFrame(MEstandarizada)
+            self.datosEstandarizados = MEstandarizada
 
         self.datosColumnas = list(self.datosDataFrameFiltrados.columns)
 
         return self
 
     def mostrarMatrizEuclidiana(self):
-        DstEuclidiana = cdist(self.datosDataFrameFiltrados[0:5], self.datosDataFrameFiltrados[0:5], metric='euclidean')  #ddist de la biblioteca Spatial.distance
+        DstEuclidiana = cdist(self.datosEstandarizados[0:5], self.datosEstandarizados[0:5], metric='euclidean')  #ddist de la biblioteca Spatial.distance
         #dos veces la matriz para hacer el cálculo con valores diferentes de la misma matriz
         self.datosMatrizEuclidiana = pd.DataFrame(DstEuclidiana)
 
         return self
 
-    
-    def accionReglasAsoc(self):
-
-        directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/'+self.nombreArchivo)
-        DatosMovies = pd.read_csv(directorio, header=None)
-        
-        #Se crea una lista de listas a partir del dataframe y se remueven los 'NaN'
-        #level=0 especifica desde el primer índice
-        MoviesLista = DatosMovies.stack().groupby(level=0).apply(list).tolist()
-        #cada lista dentro de la gran lista, significan las vistas de cada usuario
-
-        #se pasa MoviesLista sin Nulos
-        ReglasC1 = apriori(MoviesLista, 
-                    min_support=self.support, 
-                    min_confidence=self.confidence, 
-                    min_lift=self.lift)
-        """min_support=0.01, 
-                    min_confidence=0.3, 
-                    min_lift=2)"""
-
-        ResultadosC1 = list(ReglasC1)
-        #listaResultados = []
-        #"Regla":[],"Soporte":[],"Confianza":[], "Lift":[]};
-
-        for item in ResultadosC1:
-            #El primer índice de la lista
-            Emparejar = item[0]
-            items = [x for x in Emparejar]
-
-
-            self.listaResultados.append( {'Regla': "Regla: " + str(item[0]), 'Soporte': "Soporte: " + str(item[1]), 'Confianza': "Confianza: " + str(item[2][0][2]), 'Lift': "Lift: " + str(item[2][0][3])} )
-
-            #listaResultados["Regla"].append("Regla: " + str(item[0]))
-            #print("Regla: " + str(item[0]))
-
-            #El segundo índice de la lista
-            #listaResultados["Soporte"].append("Soporte: " + str(item[1]))
-            #print("Soporte: " + str(item[1]))
-
-            #El tercer índice de la lista
-            #listaResultados["Confianza"].append("Confianza: " + str(item[2][0][2]))
-            #print("Confianza: " + str(item[2][0][2]))
-
-            #Cuarto elemento de la lista
-            #listaResultados["Lift"].append("Lift: " + str(item[2][0][3]))
-            #print("Lift: " + str(item[2][0][3])) 
-            #print("=====================================") 
+    def mostrarMatrizChevyshev(self):
+        DstChebyshev = cdist(self.datosDataFrameFiltrados[0:5], self.datosDataFrameFiltrados[0:5], metric='chebyshev')
+        self.datosMatrizChevyshev = pd.DataFrame(DstChebyshev)
 
         return self
+
+    def mostrarMatrizManhattan(self):
+        DstManhattan = cdist(self.datosDataFrameFiltrados[0:5], self.datosDataFrameFiltrados[0:5], metric='cityblock')
+        self.datosMatrizManhattan = pd.DataFrame(DstManhattan)
+
+        return self
+
+    def mostrarMatrizMinkowski(self):
+        DstMinkowski = cdist(self.datosDataFrameFiltrados[0:5], self.datosDataFrameFiltrados[0:5], metric='minkowski', p=1.5)
+        self.datosMatrizMinkowski = pd.DataFrame(DstMinkowski)
+
+        return self
+
+
+
+    """CALCULO DE LAS DISTANCIAS ENTRE DOS OBJETOS"""
+    def calcularDistanciaObjetosEuclidiana(self, indiceUno, indiceDos):
+        Objeto1 = self.datosEstandarizados[indiceUno]
+        Objeto2 = self.datosEstandarizados[indiceDos]
+        self.distanciaObjetosEuclidiana = distance.euclidean(Objeto1,Objeto2)
+
+        return self
+
+    def calcularDistanciaObjetosChevyshev(self, indiceUno, indiceDos):
+        Objeto1 = self.datosEstandarizados[indiceUno]
+        Objeto2 = self.datosEstandarizados[indiceDos]
+        self.distanciaObjetosChevyshev = distance.chebyshev(Objeto1,Objeto2)
+
+        return self
+
+    def calcularDistanciaObjetosManhattan(self, indiceUno, indiceDos):
+        Objeto1 = self.datosEstandarizados[indiceUno]
+        Objeto2 = self.datosEstandarizados[indiceDos]
+        self.distanciaObjetosManhattan = distance.cityblock(Objeto1,Objeto2)
+
+        return self
+
+    def calcularDistanciaObjetosMinkowski(self, indiceUno, indiceDos):
+        Objeto1 = self.datosEstandarizados[indiceUno]
+        Objeto2 = self.datosEstandarizados[indiceDos]
+        self.distanciaObjetosMinkowski = distance.minkowski(Objeto1,Objeto2, p=1.5)
+
+        return self
+
+

@@ -605,12 +605,13 @@ input[type="number"] {
 }
 
 
+/* PARTE DEL FORMULARIO EN DONDE SE LISTAN LAS CARACTERÍSTICAS */
 .contenedor-form-metricas{
   margin: auto;
   margin-top: -15px;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 15px;;
+  gap: 15px;
   margin-bottom: 10px;
 }
 
@@ -633,6 +634,19 @@ input[type="number"] {
 input[type="submit"] {
   display: none;
 }
+
+
+/* FORMULARIO EN DONDE SE PIDEN LAS DISTANCIAS DE DOS OBJETOS  */
+
+.contenedor-form-distancia-objetos .valor{
+  margin-right: 30px;
+}
+
+.contenedor-form-distancia-objetos br{
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
 
 /*  Métricas: Matriz de datos Euclidianos  */
 

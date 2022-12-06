@@ -7,11 +7,11 @@
 {%  block content %}
 
     <div>
-        <h1>Métricas de distancia - Matrices con distancias</h1>
+        <h1>Clustering - Clustering Jerárquico y Particional</h1>
     </div>
 
     <div class="contenedor-texto-algoritmo contenedor-texto-algoritmo1">
-        <p>En esta vista se mostrarán las diferentes métricas de distancia para conocer la similitud entre datos.
+        <p>En esta vista se mostrarán los dos tipos de Clustering, haciendo uso de métricas de distancia y selección de características.
         </p>
     </div>
 
@@ -29,7 +29,7 @@
 
         <div class="cardGrid-scroll" style="display: {{displaySeleccion}};">
             <div>
-                <h2>Datos metricas</h2>
+                <h2>Variables del DataSet</h2>
             </div>
             <h3>Selección de características (selecciona las variables a eliminar)</h3>
             <div class="containerFormularioMetricasSeleccion">    <!-- containerFormularioApriori -->
@@ -389,7 +389,7 @@
     <!--CONTENEDOR FUERA DEL GRID-->
     <div>
         <label for="eliminar-dataset" class="custom-file-form-ap">Eliminar Dataset</label>
-        <input class="custom-file-form-ap" type="submit" value="Eliminar DataSet" onclick="location.href='{% url 'metricas-eliminar-dataset' %}'" name='eliminar-data-metricas' id="eliminar-dataset">
+        <input class="custom-file-form-ap" type="submit" value="Eliminar DataSet" onclick="location.href='{% url 'clustering-eliminar-dataset' %}'" name='eliminar-data-clustering' id="eliminar-dataset">
     </div>
 
 

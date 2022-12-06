@@ -15,6 +15,10 @@ urlpatterns = [
     path("metricas/algoritmo-eliminar", views.eliminarDataSetMetricas, name="metricas-eliminar-dataset"),
 
 
+    path("clustering/algoritmo", views.validacionClustering, name="clustering-validacion"),
+    path("clustering/algoritmo-eliminar", views.eliminarDataSetClustering, name="clustering-eliminar-dataset"),
+
+
     #path("apriori/algoritmo", views.apriori, name="apriori-algoritmo"),
     #path("apriori/subir", views.subirApriori, name="apriori-subir"),
 
