@@ -40,6 +40,14 @@ from scipy.spatial import distance
 
 #import de clustering
 from .clustering import clustering
+#para trabajar con el árbol jerarquico
+import scipy.cluster.hierarchy as shc
+from sklearn.cluster import AgglomerativeClustering
+
+#para arbol particional Se importan las bibliotecas
+from sklearn.cluster import KMeans
+from sklearn.metrics import pairwise_distances_argmin_min
+from kneed import KneeLocator
 
 
 
@@ -65,6 +73,9 @@ pantallaMatrices = False
 variableNombreClustering = ""
 objetoClustering = clustering(variableNombreClustering)
 accesoValidadoClustering = False
+pantallaClustering = False
+arbolJerarquicoGuardado = 0
+graficoRodillaGuardado = 0
 
 
 
@@ -107,7 +118,7 @@ def validacionApriori(request):
             print(nombreArchivo)
 
             #se pone el directorio completo
-            directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/'+nombreArchivo)
+            directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/apriori/'+nombreArchivo)
             #print(directorio)
 
             #se coloca el directorio y el nombre del archivo
@@ -261,7 +272,7 @@ def validacionMetricasDistancia(request):
             variableNombreMetricas = nombreArchivo
 
             #se pone el directorio completo
-            directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/'+nombreArchivo)
+            directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/metricas/'+nombreArchivo)
 
             #se coloca el directorio y el nombre del archivo
             filename = fs.save(directorio, myfile)
@@ -548,6 +559,9 @@ def validacionClustering(request):
     global accesoValidadoClustering
     global variableNombreClustering
     global objetoClustering
+    global pantallaClustering
+    global arbolJerarquicoGuardado
+    global graficoRodillaGuardado
 
     if(accesoValidadoClustering == False):
         #no se ha validado el dataset, entonces se redirige a la vista de subir archivo
@@ -593,27 +607,33 @@ def validacionClustering(request):
 
 
         if request.method == 'GET':
-            if pantallaMatrices == True:
-                print("CUando se esté en la pantalla de subir objetos, y no se ingrese correctamente")
-                #aquí se ha seleccionado alguna característica
-                mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
-                return render(request, 'views/metricas/metricasDistancia.html', {
+            if pantallaClustering == True:
+                print("Cuando ya se haya calculado algún cluster, pero se ingrese a la pantalla de Clustering desde otra vista")
+                mapaCalorGenerado = generarMapaMetricas(objetoClustering.matrizInf, objetoClustering.datosDF)
+                return render(request, 'views/clustering/clustering.html', {
                     'mapaCalor':mapaCalorGenerado,
-                    'listaColumnas':objetoMetricas.datosColumnas,
+                    'listaColumnas':objetoClustering.datosColumnas,
                     'displaySeleccion':"none",
                     'display':"block",
-                    'dataFrameEuclidiana':objetoMetricas.datosMatrizEuclidiana,
-                    'dataFrameChevyshev':objetoMetricas.datosMatrizChevyshev,
-                    'dataFrameManhattan':objetoMetricas.datosMatrizManhattan,
-                    'dataFrameMinkowski':objetoMetricas.datosMatrizMinkowski,
-                    'numeroObjetos': objetoMetricas.numeroObjetosMatriz,
+                    'numeroObjetos': objetoClustering.numeroObjetosMatriz,
+
+                    'arbolJerarquico': arbolJerarquicoGuardado,
+                    'dataFrameJerarquico':objetoClustering.matrizEtiquetadaJerarquico,
+                    'dataFrameConteoJerarquico':objetoClustering.conteoCadaClusterJerarquico,
+                    'dataFrameCentroidesJerarquico':objetoClustering.centroidesJerarquico,
+
+                    'arbolParticional':graficoRodillaGuardado,
+                    'dataFrameParticional':objetoClustering.matrizEtiquetadaParticional,
+                    'dataFrameConteoParticional':objetoClustering.conteoCadaClusterParticional,
+                    'dataFrameCentroidesParticional':objetoClustering.centroidesParticional,
                 })
 
             else:
-                mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
-                return render(request, 'views/metricas/metricasDistancia.html', {
+                print("Pantalla GET cuando se regresa a la vista de Clustering, y no se haya entrada antes a calcular los clusters")
+                mapaCalorGenerado = generarMapaMetricas(objetoClustering.matrizInf, objetoClustering.datosDF)
+                return render(request, 'views/clustering/clustering.html', {
                     'mapaCalor':mapaCalorGenerado,
-                    'listaColumnas':objetoMetricas.datosColumnas,
+                    'listaColumnas':objetoClustering.datosColumnas,
                     'displaySeleccion':"block",
                     'display':"none",
                 })
@@ -648,7 +668,7 @@ def validacionClustering(request):
                     print("Se procesan las características")
                     print()
 
-                    pantallaMatrices = True
+                    pantallaClustering = True
 
                     diccionarioCaracteristicas = request.POST
                     listaCaracteristicas = []
@@ -668,25 +688,36 @@ def validacionClustering(request):
 
 
                     """HASTA ESTE PUNTO, LO ANTERIOR ES LO MISMO QUE EN MÉTRICAS"""
-                    #obtener las matrices de distancias parciales
-                    objetoClustering = objetoMetricas.mostrarMatrizEuclidiana()
-                    objetoClustering = objetoMetricas.mostrarMatrizChevyshev()
-                    objetoMetricas = objetoMetricas.mostrarMatrizManhattan()
-                    objetoMetricas = objetoMetricas.mostrarMatrizMinkowski()
 
+
+                    #obtener la matriz con los clusters jerarquicos
+                    objetoClustering = objetoClustering.arbolJerarquico()
+                    #generar el arbol jerarquico dibujado
+                    arbolJerarquico = generarArbolJerarquico(objetoClustering.datosEstandarizados)
+
+
+                    #ahora el arbol particional
+                    objetoClustering = objetoClustering.arbolParticional()
+                    arbolParticional = generarGraficoRodilla(objetoClustering.sse)
                     
                     #aquí se ha seleccionado alguna característica
-                    mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
-                    return render(request, 'views/metricas/metricasDistancia.html', {
+                    mapaCalorGenerado = generarMapaMetricas(objetoClustering.matrizInf, objetoClustering.datosDF)
+                    return render(request, 'views/clustering/clustering.html', {
                         'mapaCalor':mapaCalorGenerado,
-                        'listaColumnas':objetoMetricas.datosColumnas,
+                        'listaColumnas':objetoClustering.datosColumnas,
                         'displaySeleccion':"none",
                         'display':"block",
-                        'dataFrameEuclidiana':objetoMetricas.datosMatrizEuclidiana,
-                        'dataFrameChevyshev':objetoMetricas.datosMatrizChevyshev,
-                        'dataFrameManhattan':objetoMetricas.datosMatrizManhattan,
-                        'dataFrameMinkowski':objetoMetricas.datosMatrizMinkowski,
-                        'numeroObjetos': objetoMetricas.numeroObjetosMatriz,
+                        'numeroObjetos': objetoClustering.numeroObjetosMatriz,
+
+                        'arbolJerarquico': arbolJerarquico,
+                        'dataFrameJerarquico':objetoClustering.matrizEtiquetadaJerarquico,
+                        'dataFrameConteoJerarquico':objetoClustering.conteoCadaClusterJerarquico,
+                        'dataFrameCentroidesJerarquico':objetoClustering.centroidesJerarquico,
+
+                        'arbolParticional':arbolParticional,
+                        'dataFrameParticional':objetoClustering.matrizEtiquetadaParticional,
+                        'dataFrameConteoParticional':objetoClustering.conteoCadaClusterParticional,
+                        'dataFrameCentroidesParticional':objetoClustering.centroidesParticional,
                     })
 
 
@@ -700,114 +731,6 @@ def validacionClustering(request):
                         'display':'block',
                         'muestraReporte':'block',
                     })
-
-            elif request.POST["form-tipo"] == 'form-matriz-euclidiana':
-                """Logica de la generacion de distancia euclidiana"""
-
-                #se obtiene la distancia Euclidiana
-
-                #el nombre de la variable en POST es el "name" del formulario
-                valorObjeto1 = int(request.POST["name_valor1"])
-                valorObjeto2 = int(request.POST["name_valor2"])
-                objetoMetricas = objetoMetricas.calcularDistanciaObjetosEuclidiana(valorObjeto1, valorObjeto2)
-
-                
-                #aquí se ha seleccionado alguna característica
-                mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
-                return render(request, 'views/metricas/metricasDistancia.html', {
-                    'mapaCalor':mapaCalorGenerado,
-                    'listaColumnas':objetoMetricas.datosColumnas,
-                    'displaySeleccion':"none",
-                    'display':"block",
-                    'dataFrameEuclidiana':objetoMetricas.datosMatrizEuclidiana,
-                    'dataFrameChevyshev':objetoMetricas.datosMatrizChevyshev,
-                    'dataFrameManhattan':objetoMetricas.datosMatrizManhattan,
-                    'dataFrameMinkowski':objetoMetricas.datosMatrizMinkowski,
-                    'numeroObjetos': objetoMetricas.numeroObjetosMatriz,
-                    'distanciaObjetosEuclidiana': objetoMetricas.distanciaObjetosEuclidiana,
-                    'objetoEu1':valorObjeto1,
-                    'objetoEu2':valorObjeto2,
-                    'hayDistancia':"Euclidiana",
-                })
-
-            elif request.POST["form-tipo"] == 'form-matriz-chevyshev':
-                """Logica de la generacion de distancia chevyshev"""
-
-                #el nombre de la variable en POST es el "name" del formulario
-                valorObjeto1 = int(request.POST["name_valor1"])
-                valorObjeto2 = int(request.POST["name_valor2"])
-                objetoMetricas = objetoMetricas.calcularDistanciaObjetosChevyshev(valorObjeto1, valorObjeto2)
-
-                
-                #aquí se ha seleccionado alguna característica
-                mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
-                return render(request, 'views/metricas/metricasDistancia.html', {
-                    'mapaCalor':mapaCalorGenerado,
-                    'listaColumnas':objetoMetricas.datosColumnas,
-                    'displaySeleccion':"none",
-                    'display':"block",
-                    'dataFrameEuclidiana':objetoMetricas.datosMatrizEuclidiana,
-                    'dataFrameChevyshev':objetoMetricas.datosMatrizChevyshev,
-                    'dataFrameManhattan':objetoMetricas.datosMatrizManhattan,
-                    'dataFrameMinkowski':objetoMetricas.datosMatrizMinkowski,
-                    'numeroObjetos': objetoMetricas.numeroObjetosMatriz,
-                    'distanciaObjetosChevyshev': objetoMetricas.distanciaObjetosChevyshev,
-                    'objetoCh1':valorObjeto1,
-                    'objetoCh2':valorObjeto2,
-                    'hayDistancia':"Chevyshev",
-                })
-            elif request.POST["form-tipo"] == 'form-matriz-manhattan':
-                """Logica de la generacion de distancia manhattan"""
-
-                #el nombre de la variable en POST es el "name" del formulario
-                valorObjeto1 = int(request.POST["name_valor1"])
-                valorObjeto2 = int(request.POST["name_valor2"])
-                objetoMetricas = objetoMetricas.calcularDistanciaObjetosManhattan(valorObjeto1, valorObjeto2)
-
-                
-                #aquí se ha seleccionado alguna característica
-                mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
-                return render(request, 'views/metricas/metricasDistancia.html', {
-                    'mapaCalor':mapaCalorGenerado,
-                    'listaColumnas':objetoMetricas.datosColumnas,
-                    'displaySeleccion':"none",
-                    'display':"block",
-                    'dataFrameEuclidiana':objetoMetricas.datosMatrizEuclidiana,
-                    'dataFrameChevyshev':objetoMetricas.datosMatrizChevyshev,
-                    'dataFrameManhattan':objetoMetricas.datosMatrizManhattan,
-                    'dataFrameMinkowski':objetoMetricas.datosMatrizMinkowski,
-                    'numeroObjetos': objetoMetricas.numeroObjetosMatriz,
-                    'distanciaObjetosManhattan': objetoMetricas.distanciaObjetosManhattan,
-                    'objetoMan1':valorObjeto1,
-                    'objetoMan2':valorObjeto2,
-                    'hayDistancia':"Manhattan",
-                })
-            elif request.POST["form-tipo"] == 'form-matriz-minkowski':
-                """Logica de la generacion de distancia minkowski"""
-
-                #el nombre de la variable en POST es el "name" del formulario
-                valorObjeto1 = int(request.POST["name_valor1"])
-                valorObjeto2 = int(request.POST["name_valor2"])
-                objetoMetricas = objetoMetricas.calcularDistanciaObjetosMinkowski(valorObjeto1, valorObjeto2)
-
-                
-                #aquí se ha seleccionado alguna característica
-                mapaCalorGenerado = generarMapaMetricas(objetoMetricas.matrizInf, objetoMetricas.datosDF)
-                return render(request, 'views/metricas/metricasDistancia.html', {
-                    'mapaCalor':mapaCalorGenerado,
-                    'listaColumnas':objetoMetricas.datosColumnas,
-                    'displaySeleccion':"none",
-                    'display':"block",
-                    'dataFrameEuclidiana':objetoMetricas.datosMatrizEuclidiana,
-                    'dataFrameChevyshev':objetoMetricas.datosMatrizChevyshev,
-                    'dataFrameManhattan':objetoMetricas.datosMatrizManhattan,
-                    'dataFrameMinkowski':objetoMetricas.datosMatrizMinkowski,
-                    'numeroObjetos': objetoMetricas.numeroObjetosMatriz,
-                    'distanciaObjetosMinkowski': objetoMetricas.distanciaObjetosMinkowski,
-                    'objetoMin1':valorObjeto1,
-                    'objetoMin2':valorObjeto2,
-                    'hayDistancia':"Minkowski",
-                })
                 
 
             return 0
@@ -826,6 +749,51 @@ def eliminarDataSetClustering(request):
         accesoValidadoClustering = False
         return render(request, 'views/clustering/subirClustering.html')
 
+def generarArbolJerarquico(matrizEstandarizada):
+
+    global arbolJerarquicoGuardado
+    
+    plt.figure(figsize=(10, 7))
+    plt.title("Árbol jerárquico")
+    plt.xlabel('Observaciones')
+    plt.ylabel('Distancia')
+    shc.dendrogram(shc.linkage(matrizEstandarizada, method='complete', metric='euclidean'))
+
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+
+    graphic = base64.b64encode(image_png)
+    graphic = graphic.decode('utf-8')
+
+    arbolJerarquicoGuardado = graphic
+
+    return graphic
+
+def generarGraficoRodilla(matrizSSE):
+
+    global graficoRodillaGuardado
+
+    kl = KneeLocator(range(2, 12), matrizSSE, curve="convex", direction="decreasing")
+    kl.elbow
+    #se localiza el mejor numero de clusters con kneed
+    plt.style.use('ggplot')
+    kl.plot_knee()
+    
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+
+    graphic = base64.b64encode(image_png)
+    graphic = graphic.decode('utf-8')
+
+    graficoRodillaGuardado = graphic
+
+    return graphic
 
 
 

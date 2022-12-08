@@ -28,7 +28,7 @@ class AprioriAlgorithm:
         self.listaResultados = []
 
     def accion(self): 
-        directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/'+self.nombreArchivo)
+        directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/apriori/'+self.nombreArchivo)
         DatosMovies = pd.read_csv(directorio, header=None)
         #Se incluyen todas las transacciones en una sola lista    .    Columna vertical para contabilizar mejor  7460 x 20
         Transacciones = DatosMovies.values.reshape(-1).tolist() #-1 significa 'dimensión no conocida'
@@ -57,7 +57,7 @@ class AprioriAlgorithm:
     
     def accionReglasAsoc(self):
 
-        directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/'+self.nombreArchivo)
+        directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/apriori/'+self.nombreArchivo)
         DatosMovies = pd.read_csv(directorio, header=None)
         
         #Se crea una lista de listas a partir del dataframe y se remueven los 'NaN'

@@ -16,16 +16,7 @@
     </div>
 
 
-    <div class="contenedor-algoritmo-grid" id="contenedor_algoritmo">
-
-        <div class="cardGrid" style="display: {{displaySeleccion}};">
-            <div>
-                <h2>Mapa de calor</h2>
-            </div>
-            <div>
-                <img src='data:image/png;base64,{{mapaCalor}}' style="width:90%;height:80%"/>
-            </div>
-        </div>
+    <div class="contenedor-algoritmo-grid-der" id="contenedor_algoritmo">
 
         <div class="cardGrid-scroll" style="display: {{displaySeleccion}};">
             <div>
@@ -56,29 +47,49 @@
             
         </div>
 
+        <div class="cardGrid" style="display: {{displaySeleccion}};">
+          <div>
+              <h2>Mapa de calor</h2>
+          </div>
+          <div>
+              <img src='data:image/png;base64,{{mapaCalor}}' style="width:100%;height:100%; margin-left: 35px;"/>
+          </div>
+        </div>
+
+
+
+        <div class="cardGrid elemento-abajo" style="display: {{display}}">
+          <h2>Arbol Jerarquico</h2>
+          <h3>Distancias Euclidianas</h3>
+
+          <div>
+            <img src='data:image/png;base64,{{arbolJerarquico}}' style="width:110%;height:120%; margin-left: -28px;"/>
+          </div>            
+        </div>
+
 
         <div id="ejecucion-algoritmo" class="cardGrid-scroll elemento-abajo" style="display: {{display}}">
             
 
-            <h2>Matriz de distancia</h2>
-            <h3>Euclidiana</h3>
+            <h2>Matriz con los clusters</h2>
+            <h3>Clustering Jerarquico</h3>
 
-            <p style="margin-top: 20px;">Se muestra solo una parte de la Matriz de Distancias (cinco objetos) para mayor comodidad visual (la Matriz completa cuenta con {{numeroObjetos}} objetos).</p>
+            <p style="margin-top: 20px;">Se muestra la matriz de datos con la etiqueta de los clusters.</p>
 
 
-            <div class="tabla-matriz">
-                <table>
-                    <tr>
-                      {% for col in dataFrameEuclidiana.columns %}
-                        <td>
+            <div class="tabla-matriz-clustering" style="background-color: #f9f9f9; font-size:9px;">
+                <table style="background-color: #f9f9f9; font-size: 9px;">
+                    <tr style="background-color: #f9f9f9; font-size: 9px;">
+                      {% for col in dataFrameJerarquico.columns %}
+                        <td style="background-color: #f9f9f9; font-size: 9px;">
                           {{col}}
                         </td>
                       {% endfor %}
                     </tr>
-                      {% for index, row in dataFrameEuclidiana.iterrows %}
-                        <tr>
+                      {% for index, row in dataFrameJerarquico.iterrows %}
+                        <tr style="background-color: #f9f9f9; font-size: 9px;">
                           {% for cell in row %}
-                            <td>
+                            <td style="background-color: #f9f9f9; font-size: 9px;">
                               {{cell}}
                             </td>
                           {% endfor %}
@@ -89,299 +100,171 @@
             
         </div>
 
-        <div class="cardGrid elemento-abajo" style="display: {{display}}">
-            <h2>Opciones Matriz Euclidiana</h2>
-            <h3>Distancia entre dos objetos</h3>
 
-            {% if hayDistancia == 'Euclidiana' %}
-            
-            <div class="containerFormularioMetricasSeleccion" style="margin-top: 15px;">
-                <p style="margin-top: 50px;">La distancia entre los objetos [{{objetoEu1}}] y [{{objetoEu2}}] es de:</p>
-                <br>
-                <h3>{{distanciaObjetosEuclidiana}}</h3>
+        <!-- AHORA LAS CUENTAS DE CLUSTERS Y CENTROIDES  -->
+        <div class="cardGridPeque elemento-abajo" style="display: {{display}}">
+          <h2>Conteo de elementos en cluster</h2>
+          <h3>Resumen clustering Jerarquico</h3>
 
-                <form action="/metricas/algoritmo" method="get" id="form-resultado-eu"> <!--cardFormMetricas-->
-                    {% csrf_token %}
-                    <label for="valor-resultado-euclidiana" class="custom-file-form-ap">Calcular otra vez</label>
-                    <input class="boton-centro" type="submit" name="form-resultado-eu" value="form-resultado-eu" id="valor-resultado-euclidiana" >
-                </form>
-            </div>
-
-            {% else %}
-
-            <div class="containerFormularioMetricasSeleccion" style="margin-top: 15px;">
-                <form class="cardFormMetricas" action="" method="post" id="form-matriz-euclidiana"> <!--cardFormMetricas-->
-                    <p style="margin-top: -25px; margin-bottom: 10px;">Escoja indices válidos para los objetos [ 0 - {{numeroObjetos}} ] </p>
-                    {% csrf_token %}
-                    <div class="contenedor-form-distancia-objetos"> <!--contenedor-form-metricas-->
-
-                        <label for="id_valor1" class="valor"> Valor 1</label>
-                        <input type="number" step="1" id="id_valor1" name="name_valor1" value="0">
-                        <br>
-                        <label for="id_valor2" class="valor"> Valor 2</label>
-                        <input type="number" step="1" id="id_valor2" name="name_valor2" value="1">
-                        <br>
-
-                    </div>
-
-                    <input type="hidden" name="form-tipo" value="form-matriz-euclidiana">
-
-                    <label for="m-euclidiana" class="custom-file-form-ap">Enviar -></label>
-                    <input class="boton-centro" type="submit" name="form-matriz-euclidiana" value="form-matriz-euclidiana" id="m-euclidiana" >
-                    
-                </form>
-            </div>
-
-            {% endif %}
-
-            
-        </div>
-
-
-
-        <div class="cardGrid-scroll elemento-abajo" style="display: {{display}}">
-            
-
-            <h2>Matriz de distancia</h2>
-            <h3>Chevyshev</h3>
-
-            <p style="margin-top: 20px;">Se muestra solo una parte de la Matriz de Distancias (cinco objetos) para mayor comodidad visual (la Matriz completa cuenta con {{numeroObjetos}} objetos).</p>
-
-
-            <div class="tabla-matriz">
-                <table>
+          <div class="tabla-matriz-clustering" style="margin-top: 40px; margin-left:50px;" >
+            <table>
+                <tr>
+                  {% for col in dataFrameConteoJerarquico.columns %}
+                    <td>
+                      {{col}}
+                    </td>
+                  {% endfor %}
+                </tr>
+                  {% for index, row in dataFrameConteoJerarquico.iterrows %}
                     <tr>
-                      {% for col in dataFrameChevyshev.columns %}
+                      {% for cell in row %}
                         <td>
-                          {{col}}
+                          {{cell}}
                         </td>
                       {% endfor %}
                     </tr>
-                      {% for index, row in dataFrameChevyshev.iterrows %}
-                        <tr>
-                          {% for cell in row %}
-                            <td>
-                              {{cell}}
-                            </td>
-                          {% endfor %}
-                        </tr>
-                      {% endfor %}
-                </table>
-            </div>
-            
-        </div>
-
-        <div class="cardGrid elemento-abajo" style="display: {{display}}">
-            <h2>Opciones Matriz Chevyshev</h2>
-            <h3>Distancia entre objetos</h3>
-
-            {% if hayDistancia == 'Chevyshev' %}
-            
-            <div class="containerFormularioMetricasSeleccion" style="margin-top: 15px;">
-                <p style="margin-top: 50px;">La distancia entre los objetos [{{objetoCh1}}] y [{{objetoCh2}}] es de:</p>
-                <br>
-                <h3>{{distanciaObjetosChevyshev}}</h3>
-
-                <form action="/metricas/algoritmo" method="get" id="form-resultado-ch"> <!--cardFormMetricas-->
-                    {% csrf_token %}
-                    <label for="valor-resultado-chevyshev" class="custom-file-form-ap">Calcular otra vez</label>
-                    <input class="boton-centro" type="submit" name="form-resultado-ch" value="form-resultado-ch" id="valor-resultado-chevyshev" >
-                </form>
-            </div>
-
-            {% else %}
-
-            <div class="containerFormularioMetricasSeleccion" style="margin-top: 15px;">
-                <form class="cardFormMetricas" action="" method="post" id="form-matriz-chevyshev"> <!--cardFormMetricas-->
-                    <p style="margin-top: -25px; margin-bottom: 10px;">Escoja indices válidos para los objetos [ 0 - {{numeroObjetos}} ] </p>
-                    {% csrf_token %}
-                    <div class="contenedor-form-distancia-objetos"> <!--contenedor-form-metricas-->
-
-                        <label for="id_valor1" class="valor"> Valor 1</label>
-                        <input type="number" step="1" id="id_valor1" name="name_valor1" value="0">
-                        <br>
-                        <label for="id_valor2" class="valor"> Valor 2</label>
-                        <input type="number" step="1" id="id_valor2" name="name_valor2" value="1">
-                        <br>
-
-                    </div>
-
-                    <input type="hidden" name="form-tipo" value="form-matriz-chevyshev">
-
-                    <label for="m-chevyshev" class="custom-file-form-ap">Enviar -></label>
-                    <input class="boton-centro" type="submit" name="form-matriz-chevyshev" value="form-matriz-chevyshev" id="m-chevyshev" >
-                    
-                </form>
-            </div>
-
-            {% endif %}
-            
-            
-            
+                  {% endfor %}
+            </table>
+          </div>
+          
         </div>
 
 
-        <div class="cardGrid-scroll elemento-abajo" style="display: {{display}}">
+        <div id="ejecucion-algoritmo" class="cardGridPeque elemento-abajo" style="display: {{display}}">
             
 
-            <h2>Matriz de distancia</h2>
-            <h3>Manhattan</h3>
+          <h2>Centroides de clustering Jerarquico</h2>
+          <h3>Resumen de los datos</h3>
 
-            <p style="margin-top: 20px;">Se muestra solo una parte de la Matriz de Distancias (cinco objetos) para mayor comodidad visual (la Matriz completa cuenta con {{numeroObjetos}} objetos).</p>
+          <p style="margin-top: 20px;">Se muestra un resumen de los datos de los centroides.</p>
 
 
-            <div class="tabla-matriz">
-                <table>
-                    <tr>
-                      {% for col in dataFrameManhattan.columns %}
-                        <td>
-                          {{col}}
+          <div class="tabla-matriz-clustering" >
+            <table style="background-color: #f9f9f9; font-size:10px;">
+                <tr style="background-color: #f9f9f9; font-size:10px;">
+                  {% for col in dataFrameCentroidesJerarquico.columns %}
+                    <td style="background-color: #f9f9f9; font-size:10px;">
+                      {{col}}
+                    </td>
+                  {% endfor %}
+                </tr>
+                  {% for index, row in dataFrameCentroidesJerarquico.iterrows %}
+                    <tr style="background-color: #f9f9f9; font-size:10px;">
+                      {% for cell in row %}
+                        <td style="background-color: #f9f9f9; font-size:10px;">
+                          {{cell}}
                         </td>
                       {% endfor %}
                     </tr>
-                      {% for index, row in dataFrameManhattan.iterrows %}
-                        <tr>
-                          {% for cell in row %}
-                            <td>
-                              {{cell}}
-                            </td>
-                          {% endfor %}
-                        </tr>
-                      {% endfor %}
-                </table>
-            </div>
-            
+                  {% endfor %}
+            </table>
+          </div>
+          
         </div>
+
 
         <div class="cardGrid elemento-abajo" style="display: {{display}}">
-            <h2>Opciones Matriz Manhattan</h2>
-            <h3>Distancia entre dos objetos</h3>
+          <h2>Clustering Particional</h2>
+          <h3>Se muestra el gráfico de rodilla para escoger los clusters</h3>
 
-            {% if hayDistancia == 'Manhattan' %}
-            
-            <div class="containerFormularioMetricasSeleccion" style="margin-top: 15px;">
-                <p style="margin-top: 50px;">La distancia entre los objetos [{{objetoMan1}}] y [{{objetoMan2}}] es de:</p>
-                <br>
-                <h3>{{distanciaObjetosManhattan}}</h3>
-
-                <form action="/metricas/algoritmo" method="get" id="form-resultado-man"> <!--cardFormMetricas-->
-                    {% csrf_token %}
-                    <label for="valor-resultado-manhattan" class="custom-file-form-ap">Calcular otra vez</label>
-                    <input class="boton-centro" type="submit" name="form-resultado-man" value="form-resultado-man" id="valor-resultado-manhattan" >
-                </form>
-            </div>
-
-            {% else %}
-
-            <div class="containerFormularioMetricasSeleccion" style="margin-top: 15px;">
-                <form class="cardFormMetricas" action="" method="post" id="form-matriz-manhattan"> <!--cardFormMetricas-->
-                    <p style="margin-top: -25px; margin-bottom: 10px;">Escoja indices válidos para los objetos [ 0 - {{numeroObjetos}} ] </p>
-                    {% csrf_token %}
-                    <div class="contenedor-form-distancia-objetos"> <!--contenedor-form-metricas-->
-
-                        <label for="id_valor1" class="valor"> Valor 1</label>
-                        <input type="number" step="1" id="id_valor1" name="name_valor1" value="0">
-                        <br>
-                        <label for="id_valor2" class="valor"> Valor 2</label>
-                        <input type="number" step="1" id="id_valor2" name="name_valor2" value="1">
-                        <br>
-
-                    </div>
-
-                    <input type="hidden" name="form-tipo" value="form-matriz-manhattan">
-
-                    <label for="m-manhattan" class="custom-file-form-ap">Enviar -></label>
-                    <input class="boton-centro" type="submit" name="form-matriz-manhattan" value="form-matriz-manhattan" id="m-manhattan" >
-                    
-                </form>
-            </div>
-
-            {% endif %}
-            
-            
+          <div>
+            <img src='data:image/png;base64,{{arbolParticional}}' style="width:80%;height:80%; margin-left: -25px;"/>
+          </div>            
         </div>
 
-
-
-        <div class="cardGrid-scroll elemento-abajo" style="display: {{display}}">
+        <div id="ejecucion-algoritmo" class="cardGrid-scroll elemento-abajo" style="display: {{display}}">
             
 
-            <h2>Matriz de distancia</h2>
-            <h3>Minkowski</h3>
+          <h2>Matriz con los clusters</h2>
+          <h3>Clustering Particional</h3>
 
-            <p style="margin-top: 20px;">Se muestra solo una parte de la Matriz de Distancias (cinco objetos) para mayor comodidad visual (la Matriz completa cuenta con {{numeroObjetos}} objetos).</p>
+          <p style="margin-top: 20px;">Se muestra la matriz de datos con la etiqueta de los clusters.</p>
 
 
-            <div class="tabla-matriz">
-                <table>
-                    <tr>
-                      {% for col in dataFrameMinkowski.columns %}
-                        <td>
-                          {{col}}
-                        </td>
-                      {% endfor %}
-                    </tr>
-                      {% for index, row in dataFrameMinkowski.iterrows %}
-                        <tr>
-                          {% for cell in row %}
-                            <td>
-                              {{cell}}
-                            </td>
-                          {% endfor %}
-                        </tr>
-                      {% endfor %}
-                </table>
-            </div>
-            
-        </div>
+          <div class="tabla-matriz-clustering" style="background-color: #f9f9f9; font-size:9px;">
+              <table style="background-color: #f9f9f9; font-size: 9px;">
+                  <tr style="background-color: #f9f9f9; font-size: 9px;">
+                    {% for col in dataFrameParticional.columns %}
+                      <td style="background-color: #f9f9f9; font-size: 9px;">
+                        {{col}}
+                      </td>
+                    {% endfor %}
+                  </tr>
+                    {% for index, row in dataFrameParticional.iterrows %}
+                      <tr style="background-color: #f9f9f9; font-size: 9px;">
+                        {% for cell in row %}
+                          <td style="background-color: #f9f9f9; font-size: 9px;">
+                            {{cell}}
+                          </td>
+                        {% endfor %}
+                      </tr>
+                    {% endfor %}
+              </table>
+          </div>
+          
+      </div>
 
-        <div class="cardGrid elemento-abajo" style="display: {{display}}">
-            <h2>Opciones Matriz Minkowski</h2>
-            <h3>Distancia entre dos objetos</h3>
 
-            {% if hayDistancia == 'Minkowski' %}
-            
-            <div class="containerFormularioMetricasSeleccion" style="margin-top: 15px;">
-                <p style="margin-top: 50px;">La distancia entre los objetos [{{objetoMin1}}] y [{{objetoMin2}}] es de:</p>
-                <br>
-                <h3>{{distanciaObjetosMinkowski}}</h3>
+      <!-- AHORA LAS CUENTAS DE CLUSTERS Y CENTROIDES  -->
+      <div class="cardGridPeque elemento-abajo" style="display: {{display}}">
+        <h2>Conteo de elementos en cluster</h2>
+        <h3>Resumen clustering Particional</h3>
 
-                <form action="/metricas/algoritmo" method="get" id="form-resultado-min"> <!--cardFormMetricas-->
-                    {% csrf_token %}
-                    <label for="valor-resultado-minkowski" class="custom-file-form-ap">Calcular otra vez</label>
-                    <input class="boton-centro" type="submit" name="form-resultado-min" value="form-resultado-min" id="valor-resultado-minkowski" >
-                </form>
-            </div>
-
-            {% else %}
-
-            <div class="containerFormularioMetricasSeleccion" style="margin-top: 15px;">
-                <form class="cardFormMetricas" action="" method="post" id="form-matriz-minkowski"> <!--cardFormMetricas-->
-                    <p style="margin-top: -25px; margin-bottom: 10px;">Escoja indices válidos para los objetos [ 0 - {{numeroObjetos}} ] </p>
-                    {% csrf_token %}
-                    <div class="contenedor-form-distancia-objetos"> <!--contenedor-form-metricas-->
-
-                        <label for="id_valor1" class="valor"> Valor 1</label>
-                        <input type="number" step="1" id="id_valor1" name="name_valor1" value="0">
-                        <br>
-                        <label for="id_valor2" class="valor"> Valor 2</label>
-                        <input type="number" step="1" id="id_valor2" name="name_valor2" value="1">
-                        <br>
-
-                    </div>
-
-                    <input type="hidden" name="form-tipo" value="form-matriz-minkowski">
-
-                    <label for="m-minkowski" class="custom-file-form-ap">Enviar -></label>
-                    <input class="boton-centro" type="submit" name="form-matriz-minkowski" value="form-matriz-minkowski" id="m-minkowski" >
-                    
-                </form>
-            </div>
-
-            {% endif %}
-            
+        <div class="tabla-matriz-clustering" style="margin-top: 40px; margin-left:50px;" >
+          <table>
+              <tr>
+                {% for col in dataFrameConteoParticional.columns %}
+                  <td>
+                    {{col}}
+                  </td>
+                {% endfor %}
+              </tr>
+                {% for index, row in dataFrameConteoParticional.iterrows %}
+                  <tr>
+                    {% for cell in row %}
+                      <td>
+                        {{cell}}
+                      </td>
+                    {% endfor %}
+                  </tr>
+                {% endfor %}
+          </table>
         </div>
         
+      </div>
+
+
+      <div id="ejecucion-algoritmo" class="cardGridPeque elemento-abajo" style="display: {{display}}">
+          
+
+        <h2>Centroides de clustering Particional</h2>
+        <h3>Resumen de los datos</h3>
+
+        <p style="margin-top: 20px;">Se muestra un resumen de los datos de los centroides.</p>
+
+
+        <div class="tabla-matriz-clustering" >
+          <table style="background-color: #f9f9f9; font-size:10px;">
+              <tr style="background-color: #f9f9f9; font-size:10px;">
+                {% for col in dataFrameCentroidesParticional.columns %}
+                  <td style="background-color: #f9f9f9; font-size:10px;">
+                    {{col}}
+                  </td>
+                {% endfor %}
+              </tr>
+                {% for index, row in dataFrameCentroidesParticional.iterrows %}
+                  <tr style="background-color: #f9f9f9; font-size:10px;">
+                    {% for cell in row %}
+                      <td style="background-color: #f9f9f9; font-size:10px;">
+                        {{cell}}
+                      </td>
+                    {% endfor %}
+                  </tr>
+                {% endfor %}
+          </table>
+        </div>
+        
+      </div>
 
         <!--width="400" height="400"-->
     </div>

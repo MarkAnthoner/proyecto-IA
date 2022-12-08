@@ -44,7 +44,7 @@ class metricasDistancia:
         self.distanciaObjetosMinkowski = 0
 
     def mapaCalor(self): 
-        directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/'+self.nombreArchivo)
+        directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/metricas/'+self.nombreArchivo)
         self.datosDataFrameFiltrados = pd.read_csv(directorio)
         self.numeroObjetosMatriz = len(self.datosDataFrameFiltrados)-1
         # Se otbiene la matriz de correlaciones entre variables
