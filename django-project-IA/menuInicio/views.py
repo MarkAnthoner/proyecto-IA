@@ -873,16 +873,23 @@ def validacionClasificacion(request):
         if request.method == 'GET':
             if pantallaClasificacion == True:
                 print("Cuando ya se haya calculado la clasificacion, pero se ingrese a la pantalla de Clasificacion desde otra vista")
-                mapaCalorGenerado = generarMapaMetricas(objetoClasificacion.matrizInf, objetoClustering.datosDF)
+                
+                #generar el grafico de dispersion de prueba
+                grafico = graficoDispersionPrueba(objetoClasificacion.predictoras, objetoClasificacion.variableClase)
+                mapaCalorGenerado = generarMapaMetricas(objetoClasificacion.matrizInf, objetoClasificacion.datosDF)
                 return render(request, 'views/clasificacion/clasificacion.html', {
                     'mapaCalor':mapaCalorGenerado,
                     'listaColumnas':objetoClasificacion.datosColumnas,
                     'displaySeleccion':"none",
-                    'displayClase':"block",
+                    'displayClase':"none",
                     'displayPredictoras':"none",
                     'display':"block",
-                    'numeroObjetos': objetoClasificacion.numeroObjetosMatriz,
-                
+
+                    'dataFrameConteoClasificacion': objetoClasificacion.agrupamientoClasificacion,
+                    'graficoDispersionPrueba':grafico,
+                    'scoreRegresionLineal':objetoClasificacion.scoreClasificacion,
+                    'curvaROC': objetoClasificacion.curvaROCRegresionLineal,
+                    'calculoItem':'no',
                 })
 
             else:
@@ -994,6 +1001,7 @@ def validacionClasificacion(request):
                     diccionarioCaracteristicas = request.POST
                     listaCaracteristicas = []
                     tamanioDiccionario = len(request.POST)
+                    print(diccionarioCaracteristicas)
 
                     for key in diccionarioCaracteristicas:
                         listaCaracteristicas.append(diccionarioCaracteristicas[key])
@@ -1035,10 +1043,79 @@ def validacionClasificacion(request):
                         'dataFrameConteoClasificacion': objetoClasificacion.agrupamientoClasificacion,
                         'graficoDispersionPrueba':grafico,
                         'scoreRegresionLineal':objetoClasificacion.scoreClasificacion,
-                        'curvaROC': objetoClasificacion.curvaROCRegresionLineal
+                        'curvaROC': objetoClasificacion.curvaROCRegresionLineal,
+                        'calculoItem':'no',
+                        'resultadoClasificacion':'',
                     })
 
 
+            elif request.POST["form-tipo"] == 'form-calculo-item':
+                """Logica de la generacion del calculo de la clasificacion por regresion lineal"""
+
+                diccionarioCaracteristicas = request.POST
+                listaValores = []
+                tamanioDiccionario = len(request.POST)
+
+                for key in diccionarioCaracteristicas:
+                    listaValores.append(diccionarioCaracteristicas[key])
+
+                #solo se toman las características seleccionadas
+                tamanioLista = tamanioDiccionario - 2
+                listaValores = listaValores[1:tamanioLista]
+
+                #se obtienen los valores en flotante y en Indice
+                listaValoresValidos = [[float(el)] for el in listaValores]
+
+                #creacion de la lista de listas con el nombre de las variables y los valores en Indices
+                i = 0
+                listaParaData = []
+                combinacion = []
+                for x in objetoClasificacion.datosColumnas:
+                    combinacion.append(x)
+                    combinacion.append(listaValoresValidos[i])
+                    listaParaData.append(combinacion)
+                    
+                    combinacion = []
+                    i = i + 1
+                #listaParaData
+
+                #creacion del diccionario para pasarlo al dataFrame
+                diccionarioParaDataFrame = {}
+
+                for sublista in listaParaData:
+                    diccionarioParaDataFrame[sublista[0]] = sublista[1]    
+                #diccionarioParaDataFrame
+
+                #ejecucion del calculo de la clasificacion del item
+                dataframeItemIngresado = pd.DataFrame(diccionarioParaDataFrame)
+
+
+
+                #generar el grafico de dispersion de prueba
+                grafico = graficoDispersionPrueba(objetoClasificacion.predictoras, objetoClasificacion.variableClase)
+
+
+                #se calcula la clasificacion del item mandando un dataframe
+                objetoClasificacion = objetoClasificacion.calculoItemClasificacion(dataframeItemIngresado)
+                
+                
+                #aquí se ha seleccionado alguna característica
+                mapaCalorGenerado = generarMapaMetricas(objetoClasificacion.matrizInf, objetoClasificacion.datosDF)
+                return render(request, 'views/clasificacion/clasificacion.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoClasificacion.datosColumnas,
+                    'displaySeleccion':"none",
+                    'displayClase':"none",
+                    'displayPredictoras':"none",
+                    'display':"block",
+
+                    'dataFrameConteoClasificacion': objetoClasificacion.agrupamientoClasificacion,
+                    'graficoDispersionPrueba':grafico,
+                    'scoreRegresionLineal':objetoClasificacion.scoreClasificacion,
+                    'curvaROC': objetoClasificacion.curvaROCRegresionLineal,
+                    'calculoItem':'si',
+                    'resultadoClasificacion':objetoClasificacion.resultadoCalculoItem,
+                })
                     
 
             #elif 'form-reporte' in request.POST:

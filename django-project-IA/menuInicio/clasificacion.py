@@ -42,6 +42,7 @@ class clasificacion:
         self.matrizOriginal = []
         self.scoreClasificacion = 0
         self.curvaROCRegresionLineal = 0
+        self.resultadoCalculoItem = ""
 
 
 
@@ -181,7 +182,7 @@ class clasificacion:
                                         colnames=['Clasificación']) 
         
 
-        CurvaROC = RocCurveDisplay.from_estimator(ClasificacionRL, X_validation, Y_validation, name="Cáncer de mama")
+        CurvaROC = RocCurveDisplay.from_estimator(ClasificacionRL, X_validation, Y_validation, name="Clasificacion")
     
         buffer = BytesIO()
         plt.savefig(buffer, format='png')
@@ -194,5 +195,45 @@ class clasificacion:
 
         self.curvaROCRegresionLineal = graphic
 
+
+        return self
+
+    def calculoItemClasificacion(self, itemDataframe):
+        #division de los datos de entrenamiento y validacion
+        arrayX = np.array(self.predictoras)
+        arrayY = np.array(self.clase)
+        X_train, X_validation, Y_train, Y_validation = model_selection.train_test_split(arrayX, arrayY, 
+                                                            test_size = 0.2, 
+                                                            random_state = 1234,
+                                                            shuffle = True)
+
+        #Se entrena el modelo a partir de los datos de entrada
+        ClasificacionRL = linear_model.LogisticRegression()
+        ClasificacionRL.fit(X_train, Y_train)
+
+        #Predicciones probabilísticas de los datos de prueba
+        Probabilidad = ClasificacionRL.predict_proba(X_validation)
+        pd.DataFrame(Probabilidad).round(4)
+
+        #Clasificación final 
+        Y_ClasificacionRL = ClasificacionRL.predict(X_validation)
+
+        #Se calcula la exactitud promedio de la validación
+        self.scoreClasificacion = accuracy_score(Y_validation, Y_ClasificacionRL)
+
+
+        #Item a calcular para clasificar
+        itemACalcular = itemDataframe
+
+        resultadoClasificacion = int(ClasificacionRL.predict(itemACalcular))
+
+        #lista claves y valores por separado del diccionario
+        key_list = list(self.diccionarioEmparejamientoClases.keys())
+        val_list = list(self.diccionarioEmparejamientoClases.values())
+        #se obtiene la llave correspondiente al valor numerico de la clasificacion
+        position = val_list.index(int(resultadoClasificacion))
+        
+        #se guarda la clasificacion resultante
+        self.resultadoCalculoItem = key_list[position]
 
         return self
