@@ -1,0 +1,183 @@
+
+{% extends '../../layouts/base.html' %}
+
+{% load static %}
+
+
+{%  block content %}
+
+    <div>
+        <h1>Clasificacion</h1>
+    </div>
+
+    <div class="contenedor-texto-algoritmo contenedor-texto-algoritmo1">
+        <p>En esta vista se mostrará el modelo de clasificación.
+        </p>
+    </div>
+
+
+    <div class="contenedor-algoritmo-grid-der" id="contenedor_algoritmo">
+
+        <div class="cardGrid-scroll" style="display: {{displayClase}};">
+            <div>
+                <h2>Variable Clase</h2>
+            </div>
+            <h3>Selección de variable clase (selecciona solo una)</h3>
+            <div class="containerFormularioMetricasSeleccion">    <!-- containerFormularioApriori -->
+                <form class="cardFormMetricas" action="" method="post" id="form-seleccion-clase">
+                    {% csrf_token %}
+                    <div class="contenedor-form-metricas">      <!--  contenedor-form-ap  -->
+
+                        {% for columna in listaColumnas %}
+                            <div class="linea">
+                                <input type="checkbox" id="id_{{ columna }}" name="name_{{ columna }}" value="{{ columna }}">
+                                <label for="id_{{ columna }}"> {{ columna }}</label>
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+                    <input type="hidden" name="form-tipo" value="form-seleccion-clase">
+
+                    <label for="seleccion-clase" class="custom-file-form-ap">Enviar -></label>
+                    <input class="boton-centro" type="submit" name="form-seleccion-clase" value="form-seleccion-clase" id="seleccion-clase" >
+                    
+                </form>
+            </div>
+            
+        </div>
+
+        <div class="cardGrid-scroll" style="display: {{displayPredictoras}};">
+          <div>
+              <h2>Variables Predictoras</h2>
+          </div>
+          <h3>Selección de características (selecciona las variables a eliminar)</h3>
+          <div class="containerFormularioMetricasSeleccion">    <!-- containerFormularioApriori -->
+              <form class="cardFormMetricas" action="" method="post" id="form-seleccion-predictoras">
+                  {% csrf_token %}
+                  <div class="contenedor-form-metricas">      <!--  contenedor-form-ap  -->
+
+                      {% for columna in listaColumnas %}
+                          <div class="linea">
+                              <input type="checkbox" id="id_{{ columna }}" name="name_{{ columna }}" value="{{ columna }}">
+                              <label for="id_{{ columna }}"> {{ columna }}</label>
+                          </div>
+                      {% endfor %}
+
+                  </div>
+
+                  <input type="hidden" name="form-tipo" value="form-seleccion-predictoras">
+
+                  <label for="seleccion-predictoras" class="custom-file-form-ap">Enviar -></label>
+                  <input class="boton-centro" type="submit" name="form-seleccion-predictoras" value="form-seleccion-predictoras" id="seleccion-predictoras" >
+                  
+              </form>
+          </div>
+          
+      </div>
+
+        <div class="cardGrid" style="display: {{displaySeleccion}};">
+          <div>
+              <h2>Mapa de calor</h2>
+          </div>
+          <div>
+              <img src='data:image/png;base64,{{mapaCalor}}' style="width:100%;height:100%; margin-left: 35px;"/>
+          </div>
+        </div>
+
+
+
+        <div class="cardGrid elemento-abajo" style="display: {{display}}">
+          <h2>Clasificación Regresión</h2>
+          <h3>Gráfico de dispersión de prueba</h3>
+
+          <div>
+            <img src='data:image/png;base64,{{graficoDispersionPrueba}}' style="width:110%;height:120%; margin-left: -28px;"/>
+          </div>            
+        </div>
+
+
+        <div id="ejecucion-algoritmo" class="cardGrid-scroll elemento-abajo" style="display: {{display}}">
+            
+
+            <h2>Resultados de la ejecución del algoritmo</h2>
+            <h3>Clasificación por Regresión Lineal</h3>
+
+            <p style="margin-top: 20px;">Se muestra la exactitud promedio de la validación <b>(Score)</b>.</p>
+            <p style="margin-top: 10px; margin-bottom: 20px; color: rgb(0, 21, 255);">{{scoreRegresionLineal}}</p>
+
+
+            <h3 style="z-index: 3;">Curva ROC</h3>
+            <div>
+              <img src='data:image/png;base64,{{curvaROC}}' style="z-index: 1; width:80%;height:80%; margin-left: -28px;"/>
+            </div> 
+            
+        </div>
+
+
+        <!-- AHORA LAS CUENTAS DE CLUSTERS Y CENTROIDES  -->
+        <div class="cardGridPeque elemento-abajo" style="display: {{display}}">
+          <h2>Conteo de elementos en la clasificacion</h2>
+          <h3>Resumen de agrupamiento en clasificacion</h3>
+
+          <div class="tabla-matriz-clustering" style="margin-top: 40px; margin-left:50px;" >
+            <table>
+                <tr>
+                  {% for col in dataFrameConteoClasificacion.columns %}
+                    <td>
+                      {{col}}
+                    </td>
+                  {% endfor %}
+                </tr>
+                  {% for index, row in dataFrameConteoClasificacion.iterrows %}
+                    <tr>
+                      {% for cell in row %}
+                        <td>
+                          {{cell}}
+                        </td>
+                      {% endfor %}
+                    </tr>
+                  {% endfor %}
+            </table>
+          </div>
+          
+        </div>
+
+
+        <div id="ejecucion-algoritmo" class="cardGridPeque elemento-abajo" style="display: {{display}}">
+            
+
+          <h2>Centroides de clustering Jerarquico</h2>
+          <h3>Resumen de los datos</h3>
+
+          <p style="margin-top: 20px;">Se muestra un resumen de los datos de los centroides.</p>
+
+
+          
+          
+        </div>
+
+
+        <!--width="400" height="400"-->
+    </div>
+
+    <!--CONTENEDOR FUERA DEL GRID-->
+    <div>
+        <label for="eliminar-dataset" class="custom-file-form-ap">Eliminar Dataset</label>
+        <input class="custom-file-form-ap" type="submit" value="Eliminar DataSet" onclick="location.href='{% url 'clustering-eliminar-dataset' %}'" name='eliminar-data-clustering' id="eliminar-dataset">
+    </div>
+
+
+    <script>
+        $("#boton_esconder").click(function(){
+            $("#contenedor_algoritmo").toggle(1000);
+        }); 
+
+        $("#boton_esconder_ejecucion").click(function(){
+            $("#ejecucion-algoritmo").toggle(1000);
+        });
+        
+    </script>
+
+
+{% endblock %}

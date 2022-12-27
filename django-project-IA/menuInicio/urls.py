@@ -19,6 +19,10 @@ urlpatterns = [
     path("clustering/algoritmo-eliminar", views.eliminarDataSetClustering, name="clustering-eliminar-dataset"),
 
 
+    path("clasificacion/algoritmo", views.validacionClasificacion, name="clasificacion-validacion"),
+    path("clasificacion/algoritmo-eliminar", views.eliminarDataSetClasificacion, name="clasificacion-eliminar-dataset"),
+
+
     #path("apriori/algoritmo", views.apriori, name="apriori-algoritmo"),
     #path("apriori/subir", views.subirApriori, name="apriori-subir"),
 

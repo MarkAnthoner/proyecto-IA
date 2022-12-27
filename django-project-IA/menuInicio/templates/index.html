@@ -18,7 +18,7 @@
 
       <h1 class="title">Algoritmos disponibles</h1>
     
-      <div class="container">
+      <div class="container" style="margin-bottom: 550px;">
          
           <div class="card">
               <img src="{% static 'img/apriori.png' %}">
@@ -40,6 +40,13 @@
               <p>Algoritmos de Machine Learning que agrupan conjuntos de objetos por medio de las similitudes que existen entre ellos.</p>
               <a href="{% url 'clustering-validacion' %}">Prueba el algoritmo</a>
           </div>
+
+          <div class="card">
+            <img src="{% static 'img/clasificacion.jpg' %}">
+            <h4>Clasificación</h4>
+            <p>Algoritmos de Machine Learning que hace uso de modelos de regresión.</p>
+            <a href="{% url 'clasificacion-validacion' %}">Prueba el algoritmo</a>
+        </div>
           
       </div>
 

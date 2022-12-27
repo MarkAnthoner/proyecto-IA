@@ -50,6 +50,12 @@ from sklearn.metrics import pairwise_distances_argmin_min
 from kneed import KneeLocator
 
 
+#import de los modelos de clasificacion
+from .clasificacion import clasificacion
+from sklearn.metrics import RocCurveDisplay
+
+
+
 
 # Create your views here.
 
@@ -76,6 +82,17 @@ accesoValidadoClustering = False
 pantallaClustering = False
 arbolJerarquicoGuardado = 0
 graficoRodillaGuardado = 0
+numeroRodilla = 0
+
+
+
+#variables globales de Clasificacion
+variableNombreClasificacion = ""
+objetoClasificacion = clasificacion(variableNombreClasificacion)
+accesoValidadoClasificacion = False
+pantallaClasificacion = False
+graficoDispersionClasificacionGuardado = 0
+graficoCurvaROCGuardado = 0
 
 
 
@@ -119,7 +136,7 @@ def validacionApriori(request):
 
             #se pone el directorio completo
             directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/apriori/'+nombreArchivo)
-            #print(directorio)
+            #print(directorio) 
 
             #se coloca el directorio y el nombre del archivo
             filename = fs.save(directorio, myfile)
@@ -775,9 +792,12 @@ def generarArbolJerarquico(matrizEstandarizada):
 def generarGraficoRodilla(matrizSSE):
 
     global graficoRodillaGuardado
+    global numeroRodilla
 
     kl = KneeLocator(range(2, 12), matrizSSE, curve="convex", direction="decreasing")
-    kl.elbow
+    
+    numeroRodilla = kl.elbow
+
     #se localiza el mejor numero de clusters con kneed
     plt.style.use('ggplot')
     kl.plot_knee()
@@ -796,6 +816,302 @@ def generarGraficoRodilla(matrizSSE):
     return graphic
 
 
+
+
+"""Clasificación"""
+def validacionClasificacion(request):
+    global accesoValidadoClasificacion
+    global variableNombreClasificacion
+    global objetoClasificacion
+    global pantallaClasificacion
+
+    if(accesoValidadoClasificacion == False):
+        #no se ha validado el dataset, entonces se redirige a la vista de subir archivo
+        if request.method == 'GET':
+            accesoValidadoClasificacion = False
+            return render(request, 'views/clasificacion/subirClasificacion.html')
+        else: 
+            myfile = request.FILES['archivo-clasificacion']
+            fs = FileSystemStorage()
+
+            nombreArchivo = myfile.name
+            global variableNombreClasificacion
+            variableNombreClasificacion = nombreArchivo
+
+            #se pone el directorio completo
+            directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/clasificacion/'+nombreArchivo)
+
+            #se coloca el directorio y el nombre del archivo
+            filename = fs.save(directorio, myfile)
+            uploaded_file_url = fs.url(filename)
+
+
+            global objetoClasificacion
+            objetoClasificacion = clasificacion(variableNombreClasificacion)
+            #generamos la matriz inferior
+            objetoClasificacion = objetoClasificacion.mapaCalor()
+
+            accesoValidadoClasificacion = True
+
+            """Poner parte de la impresion en pantalla"""
+            #llamamos al metodo de este archivo que genera el grafico tomando la matriz inferior
+            mapaCalorGenerado = generarMapaMetricas(objetoClasificacion.matrizInf, objetoClasificacion.datosDF)
+
+
+            return render(request, 'views/clasificacion/clasificacion.html', {
+                'mapaCalor':mapaCalorGenerado,
+                'listaColumnas':objetoClasificacion.datosColumnas,
+                'displaySeleccion':"block",
+                'displayClase':"block",
+                'displayPredictoras':"none",
+                'display':"none",
+            })
+            #return HttpResponseRedirect(reverse('apriori-algoritmo'))
+    else:
+
+
+        if request.method == 'GET':
+            if pantallaClasificacion == True:
+                print("Cuando ya se haya calculado la clasificacion, pero se ingrese a la pantalla de Clasificacion desde otra vista")
+                mapaCalorGenerado = generarMapaMetricas(objetoClasificacion.matrizInf, objetoClustering.datosDF)
+                return render(request, 'views/clasificacion/clasificacion.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoClasificacion.datosColumnas,
+                    'displaySeleccion':"none",
+                    'displayClase':"block",
+                    'displayPredictoras':"none",
+                    'display':"block",
+                    'numeroObjetos': objetoClasificacion.numeroObjetosMatriz,
+                
+                })
+
+            else:
+                print("Pantalla GET cuando se regresa a la vista de Clasificacion, y no se haya entrada antes a calcular la clasificacion")
+                mapaCalorGenerado = generarMapaMetricas(objetoClasificacion.matrizInf, objetoClasificacion.datosDF)
+                return render(request, 'views/clasificacion/clasificacion.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoClasificacion.datosColumnas,
+                    'displaySeleccion':"block",
+                    'displayClase':"block",
+                    'displayPredictoras':"none",
+                    'display':"none",
+                })
+                #return render(request, 'views/metricas/metricasDistancia.html')
+                #return HttpResponseRedirect(reverse('apriori-algoritmo'))
+        else: 
+            
+            if request.POST["form-tipo"] == 'form-seleccion-clase':
+                """Con todo esto me di cuenta de que en el form sin seleccionar casillas, se tienen tres elementos unicamente"""
+                """
+                print()
+                print()
+                print(len(request.POST))
+                print(request.POST)
+                print()
+                print() """
+
+                #si no se seleccionó alguna caracteristica, o si se seleccionó más de 1, se vuelve a preguntar
+                if(len(request.POST) <= 3 or len(request.POST) >=5):
+                    mapaCalorGenerado = generarMapaMetricas(objetoClasificacion.matrizInf, objetoClasificacion.datosDF)
+                    print()
+                    print("Se vuelve a preguntar por las caracteristicas")
+                    print()
+                    return render(request, 'views/clasificacion/clasificacion.html', {
+                        'mapaCalor':mapaCalorGenerado,
+                        'listaColumnas':objetoClasificacion.datosColumnas,
+                        'displaySeleccion':"block",
+                        'displayClase':"block",
+                        'displayPredictoras':"none",
+                        'display':"none",
+                    })
+                else:
+                    print()
+                    print("Se procesa la clase")
+                    print()
+
+                    pantallaClasificacion = False
+
+                    diccionarioCaracteristicas = request.POST
+                    listaCaracteristicas = []
+                    tamanioDiccionario = len(request.POST)
+
+                    for key in diccionarioCaracteristicas:
+                        listaCaracteristicas.append(diccionarioCaracteristicas[key])
+
+                    #solo se toman las características seleccionadas
+                    tamanioLista = tamanioDiccionario - 2
+                    listaCaracteristicas = listaCaracteristicas[1:tamanioLista]
+                    print(listaCaracteristicas)
+                    print()
+
+                    #tomo la variable clase y se elimina de las columnas
+                    objetoClasificacion = objetoClasificacion.filtrarClase(listaCaracteristicas)
+                    objetoClasificacion.variableClase = listaCaracteristicas.pop(0)
+                    print(objetoClasificacion.variableClase)
+
+                    mapaCalorGenerado = generarMapaMetricas(objetoClasificacion.matrizInf, objetoClasificacion.datosDF)
+                    return render(request, 'views/clasificacion/clasificacion.html', {
+                        'mapaCalor':mapaCalorGenerado,
+                        'listaColumnas':objetoClasificacion.datosColumnas,
+                        'displaySeleccion':"block",
+                        'displayClase':"none",
+                        'displayPredictoras':"block",
+                        'display':"none",
+                    })
+
+
+            if request.POST["form-tipo"] == 'form-seleccion-predictoras':
+                """Con todo esto me di cuenta de que en el form sin seleccionar casillas, se tienen tres elementos unicamente"""
+                """
+                print()
+                print()
+                print(len(request.POST))
+                print(request.POST)
+                print()
+                print() """
+
+                #si no se seleccionó alguna caracteristica, se vuelve a preguntar
+                if(len(request.POST) <= 3 ):
+                    mapaCalorGenerado = generarMapaMetricas(objetoClasificacion.matrizInf, objetoClasificacion.datosDF)
+                    print()
+                    print("Se vuelve a preguntar por las caracteristicas")
+                    print()
+                    return render(request, 'views/clasificacion/clasificacion.html', {
+                        'mapaCalor':mapaCalorGenerado,
+                        'listaColumnas':objetoClasificacion.datosColumnas,
+                        'displaySeleccion':"block",
+                        'displayClase':"none",
+                        'displayPredictoras':"block",
+                        'display':"none",
+                    })
+                else:
+                    print()
+                    print("Se procesan las predictoras")
+                    print()
+
+                    pantallaClasificacion = True
+
+                    diccionarioCaracteristicas = request.POST
+                    listaCaracteristicas = []
+                    tamanioDiccionario = len(request.POST)
+
+                    for key in diccionarioCaracteristicas:
+                        listaCaracteristicas.append(diccionarioCaracteristicas[key])
+
+                    #solo se toman las características seleccionadas
+                    tamanioLista = tamanioDiccionario - 2
+                    listaCaracteristicas = listaCaracteristicas[1:tamanioLista]
+                    print(listaCaracteristicas)
+                    print()
+
+
+                    #eliminar las características
+                    objetoClasificacion = objetoClasificacion.filtrarDatos(listaCaracteristicas)
+
+
+                    """HASTA ESTE PUNTO, LO ANTERIOR ES LO MISMO QUE EN MÉTRICAS y QUE EN CLUSTERING"""
+
+
+                    #obtener las variables clase y predictoras
+                    objetoClasificacion = objetoClasificacion.variablesClaseyPredictoras()
+
+                    #generar el grafico de dispersion de prueba
+                    grafico = graficoDispersionPrueba(objetoClasificacion.predictoras, objetoClasificacion.variableClase)
+
+
+                    objetoClasificacion = objetoClasificacion.aplicacionAlgoritmoRegresionLineal()
+                    
+                    
+                    #aquí se ha seleccionado alguna característica
+                    mapaCalorGenerado = generarMapaMetricas(objetoClasificacion.matrizInf, objetoClasificacion.datosDF)
+                    return render(request, 'views/clasificacion/clasificacion.html', {
+                        'mapaCalor':mapaCalorGenerado,
+                        'listaColumnas':objetoClasificacion.datosColumnas,
+                        'displaySeleccion':"none",
+                        'displayClase':"none",
+                        'displayPredictoras':"none",
+                        'display':"block",
+
+                        'dataFrameConteoClasificacion': objetoClasificacion.agrupamientoClasificacion,
+                        'graficoDispersionPrueba':grafico,
+                        'scoreRegresionLineal':objetoClasificacion.scoreClasificacion,
+                        'curvaROC': objetoClasificacion.curvaROCRegresionLineal
+                    })
+
+
+                    
+
+            #elif 'form-reporte' in request.POST:
+            elif request.POST["form-tipo"] == 'form-reporte':
+                """Logica de generacion de reporte"""
+                print("Se genera reporte")
+                #global lista
+                return render(request, 'views/associationRules.html', {
+                        'list':lista,
+                        'display':'block',
+                        'muestraReporte':'block',
+                    })
+                
+
+            return 0
+
+
+def eliminarDataSetClasificacion(request):
+    global accesoValidadoClasificacion
+    if(accesoValidadoClasificacion == True):
+        accesoValidadoClasificacion = False
+
+        """#Falta agregar logica de eliminar archivo CSV"""
+        #return render(request, 'views/subirApriori.html')
+        return HttpResponseRedirect(reverse('index'))
+    else:
+        #si el acceso ya no es validado, se manda directamente al inicio
+        accesoValidadoClasificacion = False
+        return render(request, 'views/clustering/subirClasificacion.html')
+
+
+def graficoDispersionPrueba(datosClase, variableClase):
+    global graficoDispersionClasificacionGuardado
+    global objetoClasificacion
+    arrayDatosClase = np.array(datosClase)
+
+    #se localiza el mejor numero de clusters con kneed
+    plt.figure(figsize=(10, 7))
+    plt.scatter(arrayDatosClase[:,0], arrayDatosClase[:,1], c = objetoClasificacion.datosDataFrameFiltrados.Diagnosis)
+    plt.grid()
+    plt.xlabel(objetoClasificacion.datosColumnas[0])
+    plt.ylabel(objetoClasificacion.datosColumnas[1])
+    
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+
+    graphic = base64.b64encode(image_png)
+    graphic = graphic.decode('utf-8')
+
+    graficoDispersionClasificacionGuardado = graphic
+
+    return graphic
+
+def graficoCurvaROC():
+
+    global graficoCurvaROCGuardado
+
+    CurvaROC = RocCurveDisplay.from_estimator(ClasificacionRL, X_validation, Y_validation, name="Cáncer de mama")
+    
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+
+    graphic = base64.b64encode(image_png)
+    graphic = graphic.decode('utf-8')
+
+    graficoCurvaROCGuardado = graphic
+    return graphic
 
 def getData(request):
     """data = {

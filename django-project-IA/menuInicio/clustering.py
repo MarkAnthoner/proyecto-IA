@@ -99,8 +99,16 @@ class clustering:
 
         self.sse = SSE
 
+
+
+        #uso de kneed
+        kl = KneeLocator(range(2, 12), SSE, curve="convex", direction="decreasing")
+        numeroRodilla =  kl.elbow
+
+
+
         #Se crean las etiquetas de los elementos en los clusters
-        MParticional = KMeans(n_clusters=5, random_state=0).fit(self.datosEstandarizados)
+        MParticional = KMeans(n_clusters=numeroRodilla, random_state=0).fit(self.datosEstandarizados)
         MParticional.predict(self.datosEstandarizados)
 
         #se agrega la columna de las etiquetas en la matriz de datos
