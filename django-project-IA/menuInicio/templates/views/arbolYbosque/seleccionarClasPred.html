@@ -1,0 +1,42 @@
+
+{% extends '../../layouts/base.html' %}
+
+
+{% load static %}
+{%  block content %}
+
+
+    <!-- Imagen principal -->
+    <header>
+      <h1>Selecciona el tipo de algoritmo a usar</h1>
+      <p>Algoritmos de predicción o clasificación</p>
+    </header> 
+
+
+
+    <div>
+
+      <h1 class="title">Escoja un tipo de algoritmo</h1>
+    
+      <div class="container" style="margin-bottom: 550px;">
+         
+          <div class="card">
+              <img src="{% static 'img/pronostico2.png' %}">
+              <h4>Pronóstico</h4>
+              <p>Algoritmos de pronóstico</p>
+              <a href="{% url 'arbolYbosque-validacion' %}">Ingresa</a>
+          </div>
+          
+          <div class="card">
+              <img src="{% static 'img/clasificacion.png' %}">
+              <h4>Clasificación</h4>
+              <p>Algoritmo de clasificación</p>
+              <a href="{% url 'metricas-distancia-validacion' %}">Ingresar</a>
+          </div>
+          
+          
+      </div>
+
+    </div>
+
+{% endblock %}

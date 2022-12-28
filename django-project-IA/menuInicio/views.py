@@ -55,6 +55,10 @@ from .clasificacion import clasificacion
 from sklearn.metrics import RocCurveDisplay
 
 
+#import pronosticoArbol
+from .arbolPronostico import arbolPronostico
+from .bosquePronostico import bosquePronostico
+
 
 
 # Create your views here.
@@ -95,10 +99,30 @@ graficoDispersionClasificacionGuardado = 0
 graficoCurvaROCGuardado = 0
 
 
+#variables globales de Arboles y Bosques
+variableNombreArbolYbosque = ""
+accesoSeleccionPronosticoClasificacion = 0
+
+objetoArbolPronostico = arbolPronostico(variableNombreArbolYbosque)
+objetoBosquePronostico = bosquePronostico(variableNombreArbolYbosque)
+
+accesoValidadoArbolPronostico = False
+accesoValidadoBosquePronostico = False
+
+objetoClasificacion = clasificacion(variableNombreClasificacion)
+accesoValidadoClasificacion = False
+pantallaClasificacion = False
+graficoDispersionClasificacionGuardado = 0
+graficoCurvaROCGuardado = 0
+
+
 
 
 #Es necesario instalar la App menuInicio en el archivo settings del proyecto
 def index(request):
+    #se reinicia la variable de acceso a preguntar por los arboles y bosques
+    global accesoSeleccionPronosticoClasificacion
+    accesoSeleccionPronosticoClasificacion = 0
     return render(request, 'index.html')
 
 def temasPreferencia(request):
@@ -1192,6 +1216,403 @@ def graficoCurvaROC():
 
     graficoCurvaROCGuardado = graphic
     return graphic
+
+
+
+"""Árboles y Bosques"""
+def validacionArbolYbosque(request):
+    global accesoSeleccionPronosticoClasificacion
+    global variableNombreArbolYbosque
+    global objetoArbolPronostico
+
+    global accesoValidadoArbolPronostico
+    global accesoValidadoBosquePronostico
+
+    global accesoValidadoClasificacion
+    global pantallaClasificacion
+
+    if(accesoValidadoClasificacion == False):
+        #no se ha validado el dataset, entonces se redirige a la vista de subir archivo
+
+        if request.method == 'GET':
+            # accesoSeleccionPronosticoClasificacion = 0 "Menu principal"
+            if (accesoSeleccionPronosticoClasificacion == 0): #primera capa "Menu principal"
+                accesoSeleccionPronosticoClasificacion = 1 #se pasa a la seguda capa "seleccionTipo = 1"
+                return render(request, 'views/arbolYbosque/seleccionarClasPred.html')
+            elif (accesoSeleccionPronosticoClasificacion == 1): #segunda capa "seleccionTipo = 1"
+                accesoSeleccionPronosticoClasificacion = 2 #se pasa a la tercera capa "seleccionArbolBosque = 2"
+                return render(request, 'views/arbolYbosque/prediccion/selectArbolBosque.html')
+
+            #capa que trata de seleccionar hacia donde reedirigirse
+            elif (accesoSeleccionPronosticoClasificacion == 2): #capa de "direccionamiento de vistas"
+                print(request.GET["form-tipo-arbol-bosque"])
+                if request.GET["form-tipo-arbol-bosque"] == 'arbol-pronostico':
+                    #si se quiere ingresar al arbol pronostico, se ve si a seleccionar dataset o a los resultados
+                    if (accesoValidadoArbolPronostico == True):
+                        return render(request, 'views/arbolYbosque/prediccion/arbol/arbolPronostico.html')        
+                    else:
+                        return render(request, 'views/arbolYbosque/prediccion/arbol/subirArbol.html')
+
+                if request.GET["form-tipo-arbol-bosque"] == 'bosque-pronostico':
+                    #si se quiere ingresar al bosque pronostico, se ve si a seleccionar dataset o a los resultados
+                    if (accesoValidadoBosquePronostico == True):
+                        return render(request, 'views/arbolYbosque/prediccion/bosque/bosquePronostico.html')        
+                    else:
+                        return render(request, 'views/arbolYbosque/prediccion/bosque/subirBosque.html')
+        else: 
+            #se evalua el archivo para el tipo de algoritmo
+
+            #archivo para algoritmo arbol pronostico
+            if request.POST["form-tipo"] == 'form-subir-arbol':
+                
+                myfile = request.FILES['archivo-arbol']
+                fs = FileSystemStorage()
+
+                nombreArchivo = myfile.name
+
+                #es la global
+                variableNombreArbolYbosque = nombreArchivo
+
+                #se pone el directorio completo
+                directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/arbolYbosque/arbol/'+nombreArchivo)
+
+                #se coloca el directorio y el nombre del archivo
+                filename = fs.save(directorio, myfile)
+                uploaded_file_url = fs.url(filename)
+
+
+                global objetoArbolPronostico
+                objetoArbolPronostico = arbolPronostico(variableNombreArbolYbosque)
+                
+
+                accesoValidadoArbolPronostico = True
+
+
+                return render(request, 'views/arbolYbosque/prediccion/arbol/arbolPronostico.html', {
+                    'displaySeleccion':"block",
+                    'displayClase':"block",
+                    'displayPredictoras':"none",
+                    'display':"none",
+                })
+            
+            #archivo para algoritmo bosque pronostico
+            if request.POST["form-tipo"] == 'form-subir-bosque':
+                
+                myfile = request.FILES['archivo-bosque']
+                fs = FileSystemStorage()
+
+                nombreArchivo = myfile.name
+
+                #es la global
+                variableNombreArbolYbosque = nombreArchivo
+
+                #se pone el directorio completo
+                directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/arbolYbosque/bosque/'+nombreArchivo)
+
+                #se coloca el directorio y el nombre del archivo
+                filename = fs.save(directorio, myfile)
+                uploaded_file_url = fs.url(filename)
+
+
+                global objetoBosquePronostico
+                objetoBosquePronostico = bosquePronostico(variableNombreArbolYbosque)
+                
+
+                accesoValidadoBosquePronostico = True
+
+
+                return render(request, 'views/arbolYbosque/prediccion/bosque/bosquePronostico.html', {
+                    'displaySeleccion':"block",
+                    'displayClase':"block",
+                    'displayPredictoras':"none",
+                    'display':"none",
+                })
+            #return HttpResponseRedirect(reverse('apriori-algoritmo'))
+    else:
+
+
+        if request.method == 'GET':
+            if pantallaClasificacion == True:
+                print("Cuando ya se haya calculado la clasificacion, pero se ingrese a la pantalla de Clasificacion desde otra vista")
+                
+                #generar el grafico de dispersion de prueba
+                grafico = graficoDispersionPrueba(objetoClasificacion.predictoras, objetoClasificacion.variableClase)
+                mapaCalorGenerado = generarMapaMetricas(objetoClasificacion.matrizInf, objetoClasificacion.datosDF)
+                return render(request, 'views/clasificacion/clasificacion.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoClasificacion.datosColumnas,
+                    'displaySeleccion':"none",
+                    'displayClase':"none",
+                    'displayPredictoras':"none",
+                    'display':"block",
+
+                    'dataFrameConteoClasificacion': objetoClasificacion.agrupamientoClasificacion,
+                    'graficoDispersionPrueba':grafico,
+                    'scoreRegresionLineal':objetoClasificacion.scoreClasificacion,
+                    'curvaROC': objetoClasificacion.curvaROCRegresionLineal,
+                    'calculoItem':'no',
+                })
+
+            else:
+                print("Pantalla GET cuando se regresa a la vista de Clasificacion, y no se haya entrada antes a calcular la clasificacion")
+                mapaCalorGenerado = generarMapaMetricas(objetoClasificacion.matrizInf, objetoClasificacion.datosDF)
+                return render(request, 'views/clasificacion/clasificacion.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoClasificacion.datosColumnas,
+                    'displaySeleccion':"block",
+                    'displayClase':"block",
+                    'displayPredictoras':"none",
+                    'display':"none",
+                })
+                #return render(request, 'views/metricas/metricasDistancia.html')
+                #return HttpResponseRedirect(reverse('apriori-algoritmo'))
+        else: 
+            
+            if request.POST["form-tipo"] == 'form-seleccion-clase':
+                """Con todo esto me di cuenta de que en el form sin seleccionar casillas, se tienen tres elementos unicamente"""
+                """
+                print()
+                print()
+                print(len(request.POST))
+                print(request.POST)
+                print()
+                print() """
+
+                #si no se seleccionó alguna caracteristica, o si se seleccionó más de 1, se vuelve a preguntar
+                if(len(request.POST) <= 3 or len(request.POST) >=5):
+                    mapaCalorGenerado = generarMapaMetricas(objetoClasificacion.matrizInf, objetoClasificacion.datosDF)
+                    print()
+                    print("Se vuelve a preguntar por la variable clase")
+                    print()
+                    return render(request, 'views/clasificacion/clasificacion.html', {
+                        'mapaCalor':mapaCalorGenerado,
+                        'listaColumnas':objetoClasificacion.datosColumnas,
+                        'displaySeleccion':"block",
+                        'displayClase':"block",
+                        'displayPredictoras':"none",
+                        'display':"none",
+                    })
+                else:
+                    print()
+                    print("Se procesa la clase")
+                    print()
+
+                    pantallaClasificacion = False
+
+                    diccionarioCaracteristicas = request.POST
+                    listaCaracteristicas = []
+                    tamanioDiccionario = len(request.POST)
+
+                    for key in diccionarioCaracteristicas:
+                        listaCaracteristicas.append(diccionarioCaracteristicas[key])
+
+                    #solo se toman las características seleccionadas
+                    tamanioLista = tamanioDiccionario - 2
+                    listaCaracteristicas = listaCaracteristicas[1:tamanioLista]
+                    print(listaCaracteristicas)
+                    print()
+
+                    #tomo la variable clase y se elimina de las columnas
+                    objetoClasificacion = objetoClasificacion.filtrarClase(listaCaracteristicas)
+                    objetoClasificacion.variableClase = listaCaracteristicas.pop(0)
+                    print(objetoClasificacion.variableClase)
+
+                    mapaCalorGenerado = generarMapaMetricas(objetoClasificacion.matrizInf, objetoClasificacion.datosDF)
+                    return render(request, 'views/clasificacion/clasificacion.html', {
+                        'mapaCalor':mapaCalorGenerado,
+                        'listaColumnas':objetoClasificacion.datosColumnas,
+                        'displaySeleccion':"block",
+                        'displayClase':"none",
+                        'displayPredictoras':"block",
+                        'display':"none",
+                    })
+
+
+            if request.POST["form-tipo"] == 'form-seleccion-predictoras':
+                """Con todo esto me di cuenta de que en el form sin seleccionar casillas, se tienen tres elementos unicamente"""
+                """
+                print()
+                print()
+                print(len(request.POST))
+                print(request.POST)
+                print()
+                print() """
+
+                #si no se seleccionó alguna caracteristica, se vuelve a preguntar
+
+                #permito que se pueda continuar sin haber eliminado alguna caracteristica
+                if(len(request.POST) < 3 ):
+                    mapaCalorGenerado = generarMapaMetricas(objetoClasificacion.matrizInf, objetoClasificacion.datosDF)
+                    print()
+                    print("Se vuelve a preguntar por las caracteristicas")
+                    print()
+                    return render(request, 'views/clasificacion/clasificacion.html', {
+                        'mapaCalor':mapaCalorGenerado,
+                        'listaColumnas':objetoClasificacion.datosColumnas,
+                        'displaySeleccion':"block",
+                        'displayClase':"none",
+                        'displayPredictoras':"block",
+                        'display':"none",
+                    })
+                else:
+                    print()
+                    print("Se procesan las predictoras")
+                    print()
+
+                    pantallaClasificacion = True
+
+                    diccionarioCaracteristicas = request.POST
+                    listaCaracteristicas = []
+                    tamanioDiccionario = len(request.POST)
+                    print(diccionarioCaracteristicas)
+
+                    for key in diccionarioCaracteristicas:
+                        listaCaracteristicas.append(diccionarioCaracteristicas[key])
+
+                    #solo se toman las características seleccionadas
+                    tamanioLista = tamanioDiccionario - 2
+                    listaCaracteristicas = listaCaracteristicas[1:tamanioLista]
+                    print(listaCaracteristicas)
+                    print()
+
+
+                    #eliminar las características
+                    objetoClasificacion = objetoClasificacion.filtrarDatos(listaCaracteristicas)
+
+
+                    """HASTA ESTE PUNTO, LO ANTERIOR ES LO MISMO QUE EN MÉTRICAS y QUE EN CLUSTERING"""
+
+
+                    #obtener las variables clase y predictoras
+                    objetoClasificacion = objetoClasificacion.variablesClaseyPredictoras()
+
+                    #generar el grafico de dispersion de prueba
+                    grafico = graficoDispersionPrueba(objetoClasificacion.predictoras, objetoClasificacion.variableClase)
+
+
+                    objetoClasificacion = objetoClasificacion.aplicacionAlgoritmoRegresionLineal()
+                    
+                    
+                    #aquí se ha seleccionado alguna característica
+                    mapaCalorGenerado = generarMapaMetricas(objetoClasificacion.matrizInf, objetoClasificacion.datosDF)
+                    return render(request, 'views/clasificacion/clasificacion.html', {
+                        'mapaCalor':mapaCalorGenerado,
+                        'listaColumnas':objetoClasificacion.datosColumnas,
+                        'displaySeleccion':"none",
+                        'displayClase':"none",
+                        'displayPredictoras':"none",
+                        'display':"block",
+
+                        'dataFrameConteoClasificacion': objetoClasificacion.agrupamientoClasificacion,
+                        'graficoDispersionPrueba':grafico,
+                        'scoreRegresionLineal':objetoClasificacion.scoreClasificacion,
+                        'curvaROC': objetoClasificacion.curvaROCRegresionLineal,
+                        'calculoItem':'no',
+                        'resultadoClasificacion':'',
+                    })
+
+
+            elif request.POST["form-tipo"] == 'form-calculo-item':
+                """Logica de la generacion del calculo de la clasificacion por regresion lineal"""
+
+                diccionarioCaracteristicas = request.POST
+                listaValores = []
+                tamanioDiccionario = len(request.POST)
+
+                for key in diccionarioCaracteristicas:
+                    listaValores.append(diccionarioCaracteristicas[key])
+
+                #solo se toman las características seleccionadas
+                tamanioLista = tamanioDiccionario - 2
+                listaValores = listaValores[1:tamanioLista]
+
+                #se obtienen los valores en flotante y en Indice
+                listaValoresValidos = [[float(el)] for el in listaValores]
+
+                #creacion de la lista de listas con el nombre de las variables y los valores en Indices
+                i = 0
+                listaParaData = []
+                combinacion = []
+                for x in objetoClasificacion.datosColumnas:
+                    combinacion.append(x)
+                    combinacion.append(listaValoresValidos[i])
+                    listaParaData.append(combinacion)
+                    
+                    combinacion = []
+                    i = i + 1
+                #listaParaData
+
+                #creacion del diccionario para pasarlo al dataFrame
+                diccionarioParaDataFrame = {}
+
+                for sublista in listaParaData:
+                    diccionarioParaDataFrame[sublista[0]] = sublista[1]    
+                #diccionarioParaDataFrame
+
+                #ejecucion del calculo de la clasificacion del item
+                dataframeItemIngresado = pd.DataFrame(diccionarioParaDataFrame)
+
+
+
+                #generar el grafico de dispersion de prueba
+                grafico = graficoDispersionPrueba(objetoClasificacion.predictoras, objetoClasificacion.variableClase)
+
+
+                #se calcula la clasificacion del item mandando un dataframe
+                objetoClasificacion = objetoClasificacion.calculoItemClasificacion(dataframeItemIngresado)
+                
+                
+                #aquí se ha seleccionado alguna característica
+                mapaCalorGenerado = generarMapaMetricas(objetoClasificacion.matrizInf, objetoClasificacion.datosDF)
+                return render(request, 'views/clasificacion/clasificacion.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoClasificacion.datosColumnas,
+                    'displaySeleccion':"none",
+                    'displayClase':"none",
+                    'displayPredictoras':"none",
+                    'display':"block",
+
+                    'dataFrameConteoClasificacion': objetoClasificacion.agrupamientoClasificacion,
+                    'graficoDispersionPrueba':grafico,
+                    'scoreRegresionLineal':objetoClasificacion.scoreClasificacion,
+                    'curvaROC': objetoClasificacion.curvaROCRegresionLineal,
+                    'calculoItem':'si',
+                    'resultadoClasificacion':objetoClasificacion.resultadoCalculoItem,
+                })
+                    
+
+            #elif 'form-reporte' in request.POST:
+            elif request.POST["form-tipo"] == 'form-reporte':
+                """Logica de generacion de reporte"""
+                print("Se genera reporte")
+                #global lista
+                return render(request, 'views/associationRules.html', {
+                        'list':lista,
+                        'display':'block',
+                        'muestraReporte':'block',
+                    })
+                
+
+            return 0
+
+def seleccionTipoArbolYbosque(request):
+
+    return render(request, 'views/arbolYbosque/seleccionarClasPred.html')
+
+def eliminarDataSetArbolYbosque(request):
+    global accesoValidadoClasificacion
+    if(accesoValidadoClasificacion == True):
+        accesoValidadoClasificacion = False
+
+        """#Falta agregar logica de eliminar archivo CSV"""
+        #return render(request, 'views/subirApriori.html')
+        return HttpResponseRedirect(reverse('index'))
+    else:
+        #si el acceso ya no es validado, se manda directamente al inicio
+        accesoValidadoClasificacion = False
+        return render(request, 'views/clasificacion/subirClasificacion.html')
+
+
 
 def getData(request):
     """data = {

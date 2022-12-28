@@ -23,6 +23,10 @@ urlpatterns = [
     path("clasificacion/algoritmo-eliminar", views.eliminarDataSetClasificacion, name="clasificacion-eliminar-dataset"),
 
 
+    path("arbolYbosque/algoritmo", views.validacionArbolYbosque, name="arbolYbosque-validacion"),
+    path("arbolYbosque/algoritmo-eliminar", views.eliminarDataSetArbolYbosque, name="arbolYbosque-eliminar-dataset"),
+
+
     #path("apriori/algoritmo", views.apriori, name="apriori-algoritmo"),
     #path("apriori/subir", views.subirApriori, name="apriori-subir"),
 

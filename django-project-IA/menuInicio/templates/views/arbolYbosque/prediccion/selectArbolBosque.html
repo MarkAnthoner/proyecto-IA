@@ -1,0 +1,56 @@
+
+{% extends '../../../layouts/base.html' %}
+
+
+{% load static %}
+{%  block content %}
+
+
+    <!-- Imagen principal -->
+    <header>
+      <h1>Selecciona el tipo de algoritmo a usar</h1>
+      <p>Árbol de decisión o Bosque aleatorio</p>
+    </header> 
+
+
+
+    <div>
+
+      <h1 class="title">Escoja un tipo de algoritmo</h1>
+    
+      <div class="container" style="margin-bottom: 550px;">
+         
+          <div class="card">
+              <img src="{% static 'img/decisionTree.png' %}">
+              <h4>Árbol de decisión</h4>
+              <p>Estructura árbol</p>
+              <form action="/arbolYbosque/algoritmo" method="get" id="arbol-pronostico"> 
+                {% csrf_token %}
+
+                <input type="hidden" name="form-tipo-arbol-bosque" value="arbol-pronostico">
+
+                <label for="valorArbolPronostico" class="custom-file-form-ap">Ingresa</label>
+                <input class="boton-centro" type="submit" name="arbol-pronostico" value="arbol-pronostico" id="valorArbolPronostico" >
+              </form>
+          </div>
+          
+          <div class="card">
+              <img src="{% static 'img/forest.png' %}">
+              <h4>Bosque aleatorio</h4>
+              <p>Estructura bosque</p>
+              <form action="/arbolYbosque/algoritmo" method="get" id="bosque-pronostico"> 
+                {% csrf_token %}
+
+                <input type="hidden" name="form-tipo-arbol-bosque" value="bosque-pronostico">
+
+                <label for="valorBosquePronostico" class="custom-file-form-ap">Ingresa</label>
+                <input class="boton-centro" type="submit" name="bosque-pronostico" value="bosque-pronostico" id="valorBosquePronostico" >
+              </form>
+          </div>
+          
+          
+      </div>
+
+    </div>
+
+{% endblock %}

@@ -43,10 +43,17 @@
 
           <div class="card">
             <img src="{% static 'img/clasificacion.jpg' %}">
-            <h4>Clasificación</h4>
-            <p>Algoritmos de Machine Learning que hace uso de modelos de regresión.</p>
+            <h4>Clasificación Logística</h4>
+            <p>Algoritmo de Machine Learning que hace uso de modelos de regresión.</p>
             <a href="{% url 'clasificacion-validacion' %}">Prueba el algoritmo</a>
-        </div>
+          </div>
+
+          <div class="card">
+            <img src="{% static 'img/bosques.png' %}">
+            <h4>Árboles y Bosques</h4>
+            <p>Algoritmos de Machine Learning que hacen uso de árboles de decisión y bosques aleatorios.</p>
+            <a href="{% url 'arbolYbosque-validacion' %}">Prueba el algoritmo</a>
+          </div>
           
       </div>
 
