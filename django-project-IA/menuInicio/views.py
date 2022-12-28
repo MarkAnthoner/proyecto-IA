@@ -1253,6 +1253,19 @@ def validacionArbolYbosque(request):
                 if request.GET["form-tipo-arbol-bosque"] == 'arbol-pronostico':
                     #si se quiere ingresar al arbol pronostico, se ve si a seleccionar dataset o a los resultados
                     if (accesoValidadoArbolPronostico == True):
+                        return render(request, 'views/arbolYbosque/prediccion/arbol/arbolPronostico.html', {
+                            'nombreEmpresa':objetoArbolPronostico.nombreEmpresa,
+                            'listaColumnas':objetoArbolPronostico.columnasTrasEliminar,
+                            'displaySeleccion':"none",
+                            'displayClase':"none",
+                            'displayPredictoras':"none",
+                            'display':"block",
+
+                            'dataFrameResumenDatos': objetoArbolPronostico.empresaHistDescribe,
+                            'graficoPrecios':objetoArbolPronostico.graficaPreciosAcciones,
+                            'calculoItem':'no',
+                            'resultadoClasificacion':'',
+                        })
                         return render(request, 'views/arbolYbosque/prediccion/arbol/arbolPronostico.html',{
                             'nombreEmpresa':objetoArbolPronostico.nombreEmpresa,
                         })        
@@ -1303,6 +1316,9 @@ def validacionArbolYbosque(request):
 
                     objetoArbolPronostico = arbolPronostico(listaCaracteristicas[0])
 
+                    #ejecucion por primera vez para obtencion de dataframe y grafico
+                    objetoArbolPronostico = objetoArbolPronostico.mostrarDatosPrimeraVez()
+
                 #es la global
                 variableNombreArbolYbosque = objetoArbolPronostico.nombreEmpresa
 
@@ -1311,6 +1327,7 @@ def validacionArbolYbosque(request):
 
                 return render(request, 'views/arbolYbosque/prediccion/arbol/arbolPronostico.html', {
                     'nombreEmpresa':objetoArbolPronostico.nombreEmpresa,
+                    'listaColumnas':objetoArbolPronostico.columnasTrasEliminar,
                     'displaySeleccion':"block",
                     'displayClase':"block",
                     'displayPredictoras':"none",
@@ -1349,7 +1366,145 @@ def validacionArbolYbosque(request):
                     'displayPredictoras':"none",
                     'display':"none",
                 })
-            #return HttpResponseRedirect(reverse('apriori-algoritmo'))
+
+
+
+
+
+            #seleccionar la variable clase
+            if request.POST["form-tipo"] == 'form-seleccion-clase':
+                """Con todo esto me di cuenta de que en el form sin seleccionar casillas, se tienen tres elementos unicamente"""
+
+                #si no se seleccionó alguna caracteristica, o si se seleccionó más de 1, se vuelve a preguntar
+                if(len(request.POST) <= 3 or len(request.POST) >=5):
+                    print()
+                    print("Se vuelve a preguntar por la variable clase")
+                    print()
+                    return render(request, 'views/arbolYbosque/prediccion/arbol/arbolPronostico.html', {
+                        'nombreEmpresa':objetoArbolPronostico.nombreEmpresa,
+                        'listaColumnas':objetoArbolPronostico.columnasTrasEliminar,
+                        'displaySeleccion':"block",
+                        'displayClase':"block",
+                        'displayPredictoras':"none",
+                        'display':"none",
+                    })
+
+                else:
+                    print()
+                    print("Se procesa la clase")
+                    print()
+
+                    diccionarioCaracteristicas = request.POST
+                    listaCaracteristicas = []
+                    tamanioDiccionario = len(request.POST)
+
+                    for key in diccionarioCaracteristicas:
+                        listaCaracteristicas.append(diccionarioCaracteristicas[key])
+
+                    #solo se toman las características seleccionadas
+                    tamanioLista = tamanioDiccionario - 2
+                    listaCaracteristicas = listaCaracteristicas[1:tamanioLista]
+                    print(listaCaracteristicas)
+                    print()
+
+                    #tomo la variable clase y se elimina de las columnas
+                    objetoArbolPronostico = objetoArbolPronostico.filtrarClase(listaCaracteristicas)
+                    objetoArbolPronostico.variableClase = listaCaracteristicas.pop(0)
+                    print(objetoArbolPronostico.variableClase)
+
+                    return render(request, 'views/arbolYbosque/prediccion/arbol/arbolPronostico.html', {
+                        'nombreEmpresa':objetoArbolPronostico.nombreEmpresa,
+                        'listaColumnas':objetoArbolPronostico.columnasTrasEliminar,
+                        'displaySeleccion':"block",
+                        'displayClase':"none",
+                        'displayPredictoras':"block",
+                        'display':"none",
+                    })
+
+
+
+            if request.POST["form-tipo"] == 'form-seleccion-predictoras':
+                """Con todo esto me di cuenta de que en el form sin seleccionar casillas, se tienen tres elementos unicamente"""
+
+                #si no se seleccionó alguna caracteristica, se vuelve a preguntar
+
+                #permito que se pueda continuar sin haber eliminado alguna caracteristica
+                if(len(request.POST) < 3 ):
+                    print()
+                    print("Se vuelve a preguntar por las caracteristicas")
+                    print()
+                    return render(request, 'views/arbolYbosque/prediccion/arbol/arbolPronostico.html', {
+                        'nombreEmpresa':objetoArbolPronostico.nombreEmpresa,
+                        'listaColumnas':objetoArbolPronostico.columnasTrasEliminar,
+                        'displaySeleccion':"block",
+                        'displayClase':"none",
+                        'displayPredictoras':"block",
+                        'display':"none",
+                    })
+                else:
+                    print()
+                    print("Se procesan las predictoras")
+                    print()
+
+                    diccionarioCaracteristicas = request.POST
+                    listaCaracteristicas = []
+                    tamanioDiccionario = len(request.POST)
+                    print(diccionarioCaracteristicas)
+
+                    for key in diccionarioCaracteristicas:
+                        listaCaracteristicas.append(diccionarioCaracteristicas[key])
+
+                    #solo se toman las características seleccionadas
+                    tamanioLista = tamanioDiccionario - 2
+                    listaCaracteristicas = listaCaracteristicas[1:tamanioLista]
+                    print(listaCaracteristicas)
+                    print()
+
+
+                    #eliminar las características
+                    objetoArbolPronostico = objetoArbolPronostico.filtrarDatos(listaCaracteristicas)
+
+
+                    #obtener las variables clase y predictoras
+                    #objetoClasificacion = objetoClasificacion.variablesClaseyPredictoras()
+
+
+                    #objetoClasificacion = objetoClasificacion.aplicacionAlgoritmoRegresionLineal()
+                    
+                    
+                    #aquí se ha seleccionado alguna característica
+                    return render(request, 'views/arbolYbosque/prediccion/arbol/arbolPronostico.html', {
+                        'nombreEmpresa':objetoArbolPronostico.nombreEmpresa,
+                        'listaColumnas':objetoArbolPronostico.columnasTrasEliminar,
+                        'displaySeleccion':"none",
+                        'displayClase':"none",
+                        'displayPredictoras':"none",
+                        'display':"block",
+
+                        'dataFrameResumenDatos': objetoArbolPronostico.empresaHistDescribe,
+                        'graficoPrecios':objetoArbolPronostico.graficaPreciosAcciones,
+                        'calculoItem':'no',
+                        'resultadoClasificacion':'',
+                    })
+                    return render(request, 'views/clasificacion/clasificacion.html', {
+                        'mapaCalor':mapaCalorGenerado,
+                        'listaColumnas':objetoClasificacion.datosColumnas,
+                        'displaySeleccion':"none",
+                        'displayClase':"none",
+                        'displayPredictoras':"none",
+                        'display':"block",
+
+                        'dataFrameConteoClasificacion': objetoClasificacion.agrupamientoClasificacion,
+                        'graficoDispersionPrueba':grafico,
+                        'scoreRegresionLineal':objetoClasificacion.scoreClasificacion,
+                        'curvaROC': objetoClasificacion.curvaROCRegresionLineal,
+                        'calculoItem':'no',
+                        'resultadoClasificacion':'',
+                    })
+
+
+
+
     else:
 
 
@@ -1617,9 +1772,6 @@ def validacionArbolYbosque(request):
 
             return 0
 
-def seleccionTipoArbolYbosque(request):
-
-    return render(request, 'views/arbolYbosque/seleccionarClasPred.html')
 
 def eliminarDataSetArbolYbosque(request):
     global accesoValidadoClasificacion
