@@ -921,7 +921,7 @@ def validacionClasificacion(request):
                 if(len(request.POST) <= 3 or len(request.POST) >=5):
                     mapaCalorGenerado = generarMapaMetricas(objetoClasificacion.matrizInf, objetoClasificacion.datosDF)
                     print()
-                    print("Se vuelve a preguntar por las caracteristicas")
+                    print("Se vuelve a preguntar por la variable clase")
                     print()
                     return render(request, 'views/clasificacion/clasificacion.html', {
                         'mapaCalor':mapaCalorGenerado,
@@ -978,7 +978,9 @@ def validacionClasificacion(request):
                 print() """
 
                 #si no se seleccionó alguna caracteristica, se vuelve a preguntar
-                if(len(request.POST) <= 3 ):
+
+                #permito que se pueda continuar sin haber eliminado alguna caracteristica
+                if(len(request.POST) < 3 ):
                     mapaCalorGenerado = generarMapaMetricas(objetoClasificacion.matrizInf, objetoClasificacion.datosDF)
                     print()
                     print("Se vuelve a preguntar por las caracteristicas")
@@ -1144,7 +1146,7 @@ def eliminarDataSetClasificacion(request):
     else:
         #si el acceso ya no es validado, se manda directamente al inicio
         accesoValidadoClasificacion = False
-        return render(request, 'views/clustering/subirClasificacion.html')
+        return render(request, 'views/clasificacion/subirClasificacion.html')
 
 
 def graficoDispersionPrueba(datosClase, variableClase):
@@ -1154,7 +1156,8 @@ def graficoDispersionPrueba(datosClase, variableClase):
 
     #se localiza el mejor numero de clusters con kneed
     plt.figure(figsize=(10, 7))
-    plt.scatter(arrayDatosClase[:,0], arrayDatosClase[:,1], c = objetoClasificacion.datosDataFrameFiltrados.Diagnosis)
+    plt.scatter(arrayDatosClase[:,0], arrayDatosClase[:,1], c = objetoClasificacion.datosDataFrameFiltrados[objetoClasificacion.variableClase])
+    #plt.scatter(arrayDatosClase[:,0], arrayDatosClase[:,1], c = objetoClasificacion.datosDataFrameFiltrados.Diagnosis)
     plt.grid()
     plt.xlabel(objetoClasificacion.datosColumnas[0])
     plt.ylabel(objetoClasificacion.datosColumnas[1])
@@ -1176,7 +1179,7 @@ def graficoCurvaROC():
 
     global graficoCurvaROCGuardado
 
-    CurvaROC = RocCurveDisplay.from_estimator(ClasificacionRL, X_validation, Y_validation, name="Cáncer de mama")
+    CurvaROC = RocCurveDisplay.from_estimator(ClasificacionRL, X_validation, Y_validation, name="Clasificacion")
     
     buffer = BytesIO()
     plt.savefig(buffer, format='png')
