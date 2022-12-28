@@ -104,6 +104,8 @@ variableNombreArbolYbosque = ""
 accesoSeleccionPronosticoClasificacion = 0
 
 objetoArbolPronostico = arbolPronostico(variableNombreArbolYbosque)
+listaEmpresasPronosticoArbol = ['GRUMAB.MX', 'BIMBOA.MX', 'FMX', 'CX', 'AMZN', 'HSBC', 'C', 'BBVA','AAPL']
+#GRUMAB.MX (Maiz y tortilla), BIMBOA.MX, FMX (FEMSA: refrescos), CX (CEMEX)
 objetoBosquePronostico = bosquePronostico(variableNombreArbolYbosque)
 
 accesoValidadoArbolPronostico = False
@@ -1228,6 +1230,8 @@ def validacionArbolYbosque(request):
     global accesoValidadoArbolPronostico
     global accesoValidadoBosquePronostico
 
+    global listaEmpresasPronosticoArbol
+
     global accesoValidadoClasificacion
     global pantallaClasificacion
 
@@ -1249,9 +1253,13 @@ def validacionArbolYbosque(request):
                 if request.GET["form-tipo-arbol-bosque"] == 'arbol-pronostico':
                     #si se quiere ingresar al arbol pronostico, se ve si a seleccionar dataset o a los resultados
                     if (accesoValidadoArbolPronostico == True):
-                        return render(request, 'views/arbolYbosque/prediccion/arbol/arbolPronostico.html')        
+                        return render(request, 'views/arbolYbosque/prediccion/arbol/arbolPronostico.html',{
+                            'nombreEmpresa':objetoArbolPronostico.nombreEmpresa,
+                        })        
                     else:
-                        return render(request, 'views/arbolYbosque/prediccion/arbol/subirArbol.html')
+                        return render(request, 'views/arbolYbosque/prediccion/arbol/subirArbol.html', {
+                            'listaEmpresas':listaEmpresasPronosticoArbol,
+                        })
 
                 if request.GET["form-tipo-arbol-bosque"] == 'bosque-pronostico':
                     #si se quiere ingresar al bosque pronostico, se ve si a seleccionar dataset o a los resultados
@@ -1262,33 +1270,47 @@ def validacionArbolYbosque(request):
         else: 
             #se evalua el archivo para el tipo de algoritmo
 
-            #archivo para algoritmo arbol pronostico
-            if request.POST["form-tipo"] == 'form-subir-arbol':
-                
-                myfile = request.FILES['archivo-arbol']
-                fs = FileSystemStorage()
+            #No requiere archivo, solo debe escoger entre una lista
+            #GRUMAB.MX (Maiz y tortilla), BIMBOA.MX, FMX (FEMSA: refrescos), CX (CEMEX)
+            if request.POST["form-tipo"] == 'form-seleccion':
 
-                nombreArchivo = myfile.name
+                #permito que solo seleccione una empresa
+                if(len(request.POST) <= 3 or len(request.POST) >= 5):
+                    print()
+                    print("Se vuelve a preguntar por la empresa")
+                    print()
+                    return render(request, 'views/arbolYbosque/prediccion/arbol/subirArbol.html', {
+                        'listaEmpresas':listaEmpresasPronosticoArbol,
+                    })
+                else:
+                    print()
+                    print("Se procesa la empresa")
+                    print()
+
+                    diccionarioCaracteristicas = request.POST
+                    listaCaracteristicas = []
+                    tamanioDiccionario = len(request.POST)
+                    print(diccionarioCaracteristicas)
+
+                    for key in diccionarioCaracteristicas:
+                        listaCaracteristicas.append(diccionarioCaracteristicas[key])
+
+                    #solo se toman las características seleccionadas
+                    tamanioLista = tamanioDiccionario - 2
+                    listaCaracteristicas = listaCaracteristicas[1:tamanioLista]
+                    print(listaCaracteristicas)
+                    print()
+
+                    objetoArbolPronostico = arbolPronostico(listaCaracteristicas[0])
 
                 #es la global
-                variableNombreArbolYbosque = nombreArchivo
-
-                #se pone el directorio completo
-                directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/arbolYbosque/arbol/'+nombreArchivo)
-
-                #se coloca el directorio y el nombre del archivo
-                filename = fs.save(directorio, myfile)
-                uploaded_file_url = fs.url(filename)
-
-
-                global objetoArbolPronostico
-                objetoArbolPronostico = arbolPronostico(variableNombreArbolYbosque)
-                
+                variableNombreArbolYbosque = objetoArbolPronostico.nombreEmpresa
 
                 accesoValidadoArbolPronostico = True
 
 
                 return render(request, 'views/arbolYbosque/prediccion/arbol/arbolPronostico.html', {
+                    'nombreEmpresa':objetoArbolPronostico.nombreEmpresa,
                     'displaySeleccion':"block",
                     'displayClase':"block",
                     'displayPredictoras':"none",

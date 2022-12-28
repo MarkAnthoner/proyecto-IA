@@ -7,8 +7,8 @@ import seaborn as sns             # Para la visualización de datos basado en ma
 import yfinance as yf
 
 class arbolPronostico:
-    def __init__(self, nombreArchivo):
-        self.nombreArchivo = nombreArchivo
+    def __init__(self, nombreEmpresa):
+        self.nombreEmpresa = nombreEmpresa
         self.listaResultados = []
         self.matrizInf = []
         self.datosDF = {}
