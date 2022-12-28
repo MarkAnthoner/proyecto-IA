@@ -101,7 +101,7 @@
             
 
             <h2>Resultados de la ejecución del algoritmo</h2>
-            <h3>Clasificación por Regresión Lineal</h3>
+            <h3>Clasificación por Regresión Logística</h3>
 
             <p style="margin-top: 20px;">Se muestra la exactitud promedio de la validación <b>(Score)</b>.</p>
             <p style="margin-top: 10px; margin-bottom: 20px; color: rgb(0, 21, 255);">{{scoreRegresionLineal}}</p>
@@ -176,7 +176,8 @@
 
                       {% for columna in listaColumnas %}
                             <div class="linea">
-                                <input type="number" step="0.00001" id="id_{{ columna }}" name="name_{{ columna }}" value="0">
+                                <input type="number" step="0.00001" id="id_{{ columna }}" name="name_{{ columna }}" value="0" style="width: 5em; margin-left: -23px;">
+                                <br>
                                 <label for="id_{{ columna }}" class="valor"> {{ columna }}</label>
                             </div>
                       {% endfor %}
