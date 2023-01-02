@@ -24,7 +24,9 @@ urlpatterns = [
 
 
     path("arbolYbosque/algoritmo", views.validacionArbolYbosque, name="arbolYbosque-validacion"),
-    path("arbolYbosque/algoritmo-eliminar", views.eliminarDataSetArbolYbosque, name="arbolYbosque-eliminar-dataset"),
+    path("arbolYbosque/algoritmo-eliminar-arbol-pronostico", views.eliminarDataSetArbolPronostico, name="arbolYbosque-eliminar-dataset-arbol-pronostico"),
+    path("arbolYbosque/algoritmo-eliminar-bosque-pronostico", views.eliminarDataSetBosquePronostico, name="arbolYbosque-eliminar-dataset-bosque-pronostico"),
+
 
 
     #path("apriori/algoritmo", views.apriori, name="apriori-algoritmo"),

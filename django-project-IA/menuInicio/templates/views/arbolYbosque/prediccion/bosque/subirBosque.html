@@ -7,46 +7,43 @@
 {%  block content %}
 
     <div>
-        <h1>Subir DataSet - Bosque aleatorio</h1>
+        <h1>Seleccionar empresa - Bosque aleatorio</h1>
     </div>
 
     <div>
 
-        <h1 class="title">Subir archivo</h1>
+        <h1 class="title">Seleccionar ticker para Pronostico</h1>
 
     </div>
 
       <div class="container">
 
-        <form class="card" action="" method="post" enctype="multipart/form-data">
+        <form class="card" action="" method="post" id="form-seleccion" style="overflow-y: scroll;">
             {% csrf_token %}
-            <img src="{% static 'img/upload.png' %}">
-            <h4>Seleccione el DataSet para el algoritmo de Bosque aleatorio:</h4>
-            
-                <div class="contenedor-form">
+            <h4 style="margin-top: 30px; margin-bottom: 20px; padding: 10px;">
+                Seleccione el ticker de la empresa que desea analizar (solo uno)
+            </h4>
 
-                    <input type="hidden" name="form-tipo" value="form-subir-bosque">
+            <div class="contenedor-form">      <!--  contenedor-form-ap  -->
 
-                    <label for="file-upload" class="custom-file-upload">
-                        Examinar
-                    </label>
-                    <input  id="file-upload" type="file" name="archivo-bosque">
-                
-                    <label for="subir-archivo" class="custom-file-upload">
-                         Subir
-                    </label>
-                    <input type="submit" name="submit" id="subir-archivo">   
-                </div>
-                
+                {% for columna in listaEmpresas %}
+                    <div class="linea">
+                        <input type="checkbox" id="id_{{ columna }}" name="name_{{ columna }}" value="{{ columna }}">
+                        <label for="id_{{ columna }}"> {{ columna }}</label>
+                    </div>
+                {% endfor %}
+
+            </div>
+
+            <input type="hidden" name="form-tipo" value="form-seleccion-bosque-pronostico">
+
+            <label for="seleccion" class="custom-file-upload">Enviar</label>
+            <input type="submit" name="form-seleccion-bosque-pronostico" value="form-seleccion-bosque-pronostico" id="seleccion" >
             
         </form>
+
+       
         
-    </div>
-
-    {% if uploaded_file_url %}
-        <p>File uploaded at: <a href="{{ uploaded_file_url }}">{{ uploaded_file_url }}</a></p>
-    {% endif %}
-
-   
+    </div>   
       
 {% endblock %}

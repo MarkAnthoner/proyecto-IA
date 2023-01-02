@@ -77,9 +77,7 @@
 
         <div class="cardGrid" style="display: {{displaySeleccion}};">
           <div>
-              <h2>Mapa de calor</h2>
-          </div>
-          <div>
+            <img src="{% static 'img/lista.png' %}" style="width:80%;height:100%; margin-left: 35px;">
               <!--<img src='data:image/png;base64,{{mapaCalor}}' style="width:100%;height:100%; margin-left: 35px;"/>
               -->
           </div>
@@ -89,22 +87,27 @@
         <div id="ejecucion-algoritmo" class="cardGrid-scroll elemento-abajo" style="display: {{display}}">
             
 
-            <h2>Resumen de los datos de la empresa</h2>
-            <h3>Datos de la empresa: {{nombreEmpresa}}</h3>
+            <h2>Resultados del modelo</h2>
+            <h3 style="margin-bottom: 65px;">Score y matriz de importancia</h3>
 
+            <p style="margin-top: 20px;">Se muestra la exactitud promedio de la validación <b>(Score)</b>.</p>
+            <p style="margin-top: 10px; margin-bottom: 20px; color: rgb(0, 21, 255);">{{scoreArbolPronostico}}</p>
+
+
+            <p style="margin-top: 20px;"> <b>Matriz de Importancia.</b></p>
             <div class="tabla-matriz-clustering" style="margin-top: 40px; margin-left:50px;" >
-                <table>
-                    <tr>
-                      {% for col in dataFrameResumenDatos.columns %}
-                        <td>
+                <table style="width:350px; margin-left: 20px; ">
+                    <tr style="width:350px;">
+                      {% for col in dataFrameImportancia.columns %}
+                        <td style="color: rgb(0, 3, 173); width:350px;">
                           {{col}}
                         </td>
                       {% endfor %}
                     </tr>
-                      {% for index, row in dataFrameResumenDatos.iterrows %}
-                        <tr>
+                      {% for index, row in dataFrameImportancia.iterrows %}
+                        <tr style="width:350px;">
                           {% for cell in row %}
-                            <td>
+                            <td style="width:350px;">
                               {{cell}}
                             </td>
                           {% endfor %}
@@ -130,18 +133,18 @@
             <h3>Datos de la empresa: {{nombreEmpresa}}</h3>
 
             <div class="tabla-matriz-clustering" style="margin-top: 40px; margin-left:50px;" >
-                <table>
-                    <tr>
+                <table style="font-size: 10px; width:690px;">
+                    <tr style="font-size: 10px; width:690px;">
                       {% for col in dataFrameResumenDatos.columns %}
-                        <td>
+                        <td style="font-size: 10px; width:690px;">
                           {{col}}
                         </td>
                       {% endfor %}
                     </tr>
                       {% for index, row in dataFrameResumenDatos.iterrows %}
-                        <tr>
+                        <tr style="font-size: 10px; width:690px;">
                           {% for cell in row %}
-                            <td>
+                            <td style="font-size: 10px; width: 690px;">
                               {{cell}}
                             </td>
                           {% endfor %}
@@ -149,10 +152,7 @@
                       {% endfor %}
                 </table>
               </div>
-
-
-            
-            
+                        
         </div>
 
 
@@ -191,20 +191,23 @@
         <div id="ejecucion-algoritmo" class="cardGrid-scroll elemento-abajo" style="display: {{display}}">
             
 
-          <h2>Clasificación de un item con ayuda del modelo</h2>
-          <h3>Ingrese valores en las variables para clasificar el elemento</h3>
+          <h2>Nuevos pronósticos</h2>
+          <h3>Ingrese valores en las variables para pronosticar el elemento</h3>
 
           {% if calculoItem == 'si' %}
             
             <div class="containerFormularioMetricasSeleccion" style="margin-top: 15px;">
-                <p style="margin-top: 50px;">La clasificación dio como resultado que el item subido es:</p>
+                <p style="margin-top: 50px;">El pronostico dio como resultado que el item subido es:</p>
                 <br>
                 <h3>{{resultadoClasificacion}}</h3>
 
-                <form action="/clasificacion/algoritmo" method="get" id="form-resultado-eu"> <!--cardFormMetricas-->
+                <form action="/arbolYbosque/algoritmo" method="get" id="form-resultado-eu"> <!--cardFormMetricas-->
                     {% csrf_token %}
+
+                    <input type="hidden" name="form-tipo-arbol-bosque" value="form-calculo-item-arbol-pronostico">
+
                     <label for="valor-resultado-euclidiana" class="custom-file-form-ap">Calcular otra vez</label>
-                    <input class="boton-centro" type="submit" name="form-resultado-eu" value="form-resultado-eu" id="valor-resultado-euclidiana" >
+                    <input class="boton-centro" type="submit" name="form-calculo-item-arbol-pronostico" value="form-calculo-item-arbol-pronostico" id="valor-resultado-euclidiana" >
                 </form>
             </div>
 
@@ -239,13 +242,34 @@
 
             {% endif %}          
 
-
-          
-          
         </div>
+
+        <div class="cardGrid-scroll elemento-abajo" style="display: {{display}}">
+          <h2>Resultados Árbol de decisión</h2>
+          <h3>Gráfico de pronóstico de precio de las acciones</h3>
+
+          <div>
+            <img src='data:image/png;base64,{{graficoPronostico}}' style="width:110%;height:150%; margin-left: -28px;"/>
+          </div>      
+
+
+          <h2 style="margin-top: 60px;">Conformación del árbol</h2>
+
+          <div>
+            <img src='data:image/png;base64,{{graficoArbol}}' style="width:110%;height:150%; margin-left: -28px;"/>
+          </div> 
+                      
+      </div>
 
 
         <!--width="400" height="400"-->
+    </div>
+
+
+     <!--CONTENEDOR FUERA DEL GRID-->
+    <div>
+      <label for="eliminar-dataset" class="custom-file-form-ap">Eliminar Dataset</label>
+      <input class="custom-file-form-ap" type="submit" value="Eliminar DataSet" onclick="location.href='{% url 'arbolYbosque-eliminar-dataset-arbol-pronostico' %}'" name='eliminar-data-arbolYbosque' id="eliminar-dataset">
     </div>
 
       

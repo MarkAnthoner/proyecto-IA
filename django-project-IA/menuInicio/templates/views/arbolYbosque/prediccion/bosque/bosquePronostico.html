@@ -11,14 +11,233 @@
 
     <div>
 
-        <h1 class="title">Modelo</h1>
+        <h1 class="title">Modelo: {{nombreEmpresa}}</h1>
 
     </div>
 
-      <div class="container">
+    <div class="contenedor-algoritmo-grid-der" id="contenedor_algoritmo">
 
-        Hola mundo en Bosque
-        
+        <div class="cardGrid-scroll" style="display: {{displayClase}};">
+            <div>
+                <h2>Variable Clase</h2>
+            </div>
+            <h3>Selección de variable clase (selecciona solo una)</h3>
+            <div class="containerFormularioMetricasSeleccion">    <!-- containerFormularioApriori -->
+                <form class="cardFormMetricas" action="" method="post" id="form-seleccion-clase">
+                    {% csrf_token %}
+                    <div class="contenedor-form-metricas">      <!--  contenedor-form-ap  -->
+
+                        {% for columna in listaColumnas %}
+                            <div class="linea">
+                                <input type="checkbox" id="id_{{ columna }}" name="name_{{ columna }}" value="{{ columna }}">
+                                <label for="id_{{ columna }}"> {{ columna }}</label>
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+                    <input type="hidden" name="form-tipo" value="form-seleccion-clase-bosque-pronostico">
+
+                    <label for="seleccion-clase" class="custom-file-form-ap">Enviar -></label>
+                    <input class="boton-centro" type="submit" name="form-seleccion-clase-bosque-pronostico" value="form-seleccion-clase-bosque-pronostico" id="seleccion-clase" >
+                    
+                </form>
+            </div>
+            
+        </div>
+
+        <div class="cardGrid-scroll" style="display: {{displayPredictoras}};">
+          <div>
+              <h2>Variables Predictoras</h2>
+          </div>
+          <h3>Selección de características (selecciona las variables a eliminar)</h3>
+          <div class="containerFormularioMetricasSeleccion">    <!-- containerFormularioApriori -->
+              <form class="cardFormMetricas" action="" method="post" id="form-seleccion-predictoras">
+                  {% csrf_token %}
+                  <div class="contenedor-form-metricas">      <!--  contenedor-form-ap  -->
+
+                      {% for columna in listaColumnas %}
+                          <div class="linea">
+                              <input type="checkbox" id="id_{{ columna }}" name="name_{{ columna }}" value="{{ columna }}">
+                              <label for="id_{{ columna }}"> {{ columna }}</label>
+                          </div>
+                      {% endfor %}
+
+                  </div>
+
+                  <input type="hidden" name="form-tipo" value="form-seleccion-predictoras-bosque-pronostico">
+
+                  <label for="seleccion-predictoras" class="custom-file-form-ap">Enviar -></label>
+                  <input class="boton-centro" type="submit" name="form-seleccion-predictoras-bosque-pronostico" value="form-seleccion-predictoras-bosque-pronostico" id="seleccion-predictoras" >
+                  
+              </form>
+          </div>
+          
+      </div>
+
+        <div class="cardGrid" style="display: {{displaySeleccion}};">
+          <div>
+            <img src="{% static 'img/lista.png' %}" style="width:80%;height:100%; margin-left: 35px;">
+              <!--<img src='data:image/png;base64,{{mapaCalor}}' style="width:100%;height:100%; margin-left: 35px;"/>
+              -->
+          </div>
+        </div>
+
+
+        <div id="ejecucion-algoritmo" class="cardGrid-scroll elemento-abajo" style="display: {{display}}">
+            
+
+            <h2>Resultados del modelo</h2>
+            <h3 style="margin-bottom: 65px;">Score y matriz de importancia</h3>
+
+            <p style="margin-top: 20px;">Se muestra la exactitud promedio de la validación <b>(Score)</b>.</p>
+            <p style="margin-top: 10px; margin-bottom: 20px; color: rgb(0, 21, 255);">{{scoreBosquePronostico}}</p>
+
+
+            <p style="margin-top: 20px;"> <b>Matriz de Importancia.</b></p>
+            <div class="tabla-matriz-clustering" style="margin-top: 40px; margin-left:50px;" >
+                <table style="width:350px; margin-left: 20px; ">
+                    <tr style="width:350px;">
+                      {% for col in dataFrameImportancia.columns %}
+                        <td style="color: rgb(0, 3, 173); width:350px;">
+                          {{col}}
+                        </td>
+                      {% endfor %}
+                    </tr>
+                      {% for index, row in dataFrameImportancia.iterrows %}
+                        <tr style="width:350px;">
+                          {% for cell in row %}
+                            <td style="width:350px;">
+                              {{cell}}
+                            </td>
+                          {% endfor %}
+                        </tr>
+                      {% endfor %}
+                </table>
+              </div>
+
+
+
+            
+        </div>
+
+        <div class="cardGrid-scroll elemento-abajo" style="display: {{display}}">
+            <h2>Bosque Aleatorio</h2>
+            <h3>Gráfico de precio de las acciones</h3>
+  
+            <div>
+              <img src='data:image/png;base64,{{graficoPrecios}}' style="width:110%;height:150%; margin-left: -28px;"/>
+            </div>      
+
+            <h2>Resumen de los datos de la empresa</h2>
+            <h3>Datos de la empresa: {{nombreEmpresa}}</h3>
+
+            <div class="tabla-matriz-clustering" style="margin-top: 40px; margin-left:50px;" >
+                <table style="font-size: 10px; width:690px;">
+                    <tr style="font-size: 10px; width:690px;">
+                      {% for col in dataFrameResumenDatos.columns %}
+                        <td style="font-size: 10px; width:690px;">
+                          {{col}}
+                        </td>
+                      {% endfor %}
+                    </tr>
+                      {% for index, row in dataFrameResumenDatos.iterrows %}
+                        <tr style="font-size: 10px; width:690px;">
+                          {% for cell in row %}
+                            <td style="font-size: 10px; width: 690px;">
+                              {{cell}}
+                            </td>
+                          {% endfor %}
+                        </tr>
+                      {% endfor %}
+                </table>
+              </div>
+                        
+        </div>
+
+
+        <div id="ejecucion-algoritmo" class="cardGrid-scroll elemento-abajo" style="display: {{display}}">
+            
+
+          <h2>Nuevos pronósticos</h2>
+          <h3>Ingrese valores en las variables para pronosticar el elemento</h3>
+
+          {% if calculoItem == 'si' %}
+            
+            <div class="containerFormularioMetricasSeleccion" style="margin-top: 15px;">
+                <p style="margin-top: 50px;">El pronostico dio como resultado que el item subido es:</p>
+                <br>
+                <h3>{{resultadoClasificacion}}</h3>
+
+                <form action="/arbolYbosque/algoritmo" method="get" id="form-resultado-eu"> <!--cardFormMetricas-->
+                    {% csrf_token %}
+
+                    <input type="hidden" name="form-tipo-arbol-bosque" value="form-calculo-item-bosque-pronostico">
+
+                    <label for="valor-resultado-euclidiana" class="custom-file-form-ap">Calcular otra vez</label>
+                    <input class="boton-centro" type="submit" name="form-calculo-item-bosque-pronostico" value="form-calculo-item-bosque-pronostico" id="valor-resultado-euclidiana" >
+                </form>
+            </div>
+
+            {% else %}
+
+            <div class="containerFormularioMetricasSeleccion" style="margin-top: 15px;">
+                <form class="cardFormMetricas" action="" method="post" id="form-calculo-item"> <!--cardFormMetricas-->
+                    <p style="margin-top: -25px; margin-bottom: 20px;">Ingrese valores similares a los items de entrenamiento. </p>
+                    {% csrf_token %}
+                    <div class="contenedor-form-distancia-objetos" style="display: grid;
+                    grid-template-columns: 2fr 2fr;
+                    gap: 1em;"> <!--contenedor-form-metricas-->
+
+                      {% for columna in listaColumnas %}
+                            <div class="linea">
+                                <input type="number" step="0.00001" id="id_{{ columna }}" name="name_{{ columna }}" value="0" style="width: 5em; margin-left: -23px;">
+                                <br>
+                                <label for="id_{{ columna }}" class="valor"> {{ columna }}</label>
+                            </div>
+                      {% endfor %}
+                      <br>
+
+                    </div>
+
+                    <input type="hidden" name="form-tipo" value="form-calculo-item-bosque-pronostico">
+
+                    <label for="m-euclidiana" class="custom-file-form-ap">Enviar -></label>
+                    <input class="boton-centro" type="submit" name="form-calculo-item-bosque-pronostico" value="form-calculo-item-bosque-pronostico" id="m-euclidiana" >
+                    
+                </form>
+            </div>
+
+            {% endif %}          
+
+        </div>
+
+        <div class="cardGrid-scroll elemento-abajo" style="display: {{display}}">
+          <h2>Resultados Bosque Aleatorio</h2>
+          <h3>Gráfico de pronóstico de precio de las acciones</h3>
+
+          <div>
+            <img src='data:image/png;base64,{{graficoPronostico}}' style="width:110%;height:150%; margin-left: -28px;"/>
+          </div>      
+
+
+          <h2 style="margin-top: 60px;">Conformación del bosque</h2>
+
+          <div>
+            <img src='data:image/png;base64,{{graficoBosque}}' style="width:110%;height:150%; margin-left: -28px;"/>
+          </div> 
+                      
+      </div>
+
+
+        <!--width="400" height="400"-->
+    </div>
+
+
+     <!--CONTENEDOR FUERA DEL GRID-->
+    <div>
+      <label for="eliminar-dataset" class="custom-file-form-ap">Eliminar Dataset</label>
+      <input class="custom-file-form-ap" type="submit" value="Eliminar DataSet" onclick="location.href='{% url 'arbolYbosque-eliminar-dataset-bosque-pronostico' %}'" name='eliminar-data-arbolYbosque' id="eliminar-dataset">
     </div>
 
       

@@ -13,6 +13,12 @@ import base64
 
 import os
 
+#aplicar el algoritmo
+from sklearn import model_selection
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.tree import plot_tree
+
 class arbolPronostico:
     def __init__(self, nombreEmpresa):
         self.nombreEmpresa = nombreEmpresa
@@ -20,44 +26,31 @@ class arbolPronostico:
         self.empresaHistSinColumnas = pd.DataFrame()
         self.empresaHistDescribe = pd.DataFrame()
         self.graficaPreciosAcciones = 0
-        
+        self.graficaPronosticoAcciones = 0
+        self.graficaArbol = 0
+
+        self.empresaHistModelo = pd.DataFrame()
         self.datosColumnas = []  #lista de las columnas
         self.columnasTrasEliminar = []
 
         self.variableClase = ""
-        
-        
-        self.listaResultados = []
-        self.matrizInf = []
-        self.datosDF = {}
-        
-        self.datosColumnasSinClase = []
+        self.columnasFiltradas = False
 
-        self.datosDataFrameFiltrados = pd.DataFrame()  #data frame de la matriz de datos filtrados
-        self.datosDataFrameSinClase = pd.DataFrame()
-        self.agrupamientoClasificacion = pd.DataFrame()  #se tiene el groupBy
-
-        self.diccionarioEmparejamientoClases = {}
-        self.varClaseEsString = True
-
-
-        
         self.predictoras = []  #estructura que se usa para almacenar el Array de resultados predictores
         self.clase = [] #estructura que se usa para almacenar el Array de resultados Clase
-        self.matrizOriginal = []
+
+        self.matrizImportancia = pd.DataFrame()
+        self.resultadoCalculoItem = 0
         self.scoreClasificacion = 0
-        self.curvaROCRegresionLineal = 0
-        self.resultadoCalculoItem = ""
+        
 
-
-
-        self.numeroObjetosMatriz = 0
 
     def mostrarDatosPrimeraVez(self):
         # Para la empresa seleccionada
         DataEmpresa = yf.Ticker(self.nombreEmpresa)
         self.empresaHist = DataEmpresa.history(start = '2018-1-1', end = '2021-1-1', interval='1d')
         self.empresaHistSinColumnas = self.empresaHist
+        self.empresaHistModelo = self.empresaHist
 
         self.datosColumnas = list(self.empresaHist.columns)
         self.columnasTrasEliminar = self.datosColumnas
@@ -108,11 +101,127 @@ class arbolPronostico:
         #List1 = ['Homer',  'Bart', 'Lisa', 'Maggie', 'Lisa']
         #List2 = ['Bart', 'Homer', 'Lisa']
 
-        check = all(item in self.datosColumnas for item in listaCaracteristicas)
-        if check is True:
-            self.empresaHistSinColumnas = self.empresaHistSinColumnas.drop(columns=listaCaracteristicas)
+        if (self.columnasFiltradas == False):
+            check = all(item in self.datosColumnas for item in listaCaracteristicas)
+            if check is True:
+                self.empresaHistSinColumnas = self.empresaHistSinColumnas.drop(columns=listaCaracteristicas)
+                self.empresaHistModelo = self.empresaHistModelo.drop(columns=listaCaracteristicas)
 
-        self.columnasTrasEliminar = list(self.empresaHistSinColumnas.columns)
+            self.columnasTrasEliminar = list(self.empresaHistSinColumnas.columns)
+            self.columnasFiltradas = True
+        else:
+            print("Ya se han filtrado las columnas")
 
+
+        return self
+
+    def variablesPredictorasYClase(self):
+
+        # En caso de tener valores nulos
+        self.empresaHistModelo = self.empresaHistModelo.dropna()
+
+        X = np.array(self.empresaHistModelo[ self.columnasTrasEliminar ])
+        self.predictoras = X.tolist()
+
+        #Variable clase
+        Y = np.array(self.empresaHistModelo[self.variableClase])
+        self.clase = Y.tolist()
+
+        return self
+
+    def aplicacionAlgoritmoArbolPronostico(self):
+        #division de los datos de entrenamiento y validacion
+        arrayX = np.array(self.predictoras)
+        arrayY = np.array(self.clase)
+        X_train, X_test, Y_train, Y_test = model_selection.train_test_split(arrayX, arrayY, 
+                                                                    test_size = 0.2, 
+                                                                    random_state = 0, 
+                                                                    shuffle = True)
+
+        #Se entrena el modelo a partir de los datos de entrada
+        PronosticoAD = DecisionTreeRegressor(max_depth=9, min_samples_split=8, min_samples_leaf=4, random_state=0)
+        PronosticoAD.fit(X_train, Y_train)
+
+        #Se genera el pronóstico
+        Y_Pronostico = PronosticoAD.predict(X_test)
+
+        #Se calcula la exactitud promedio de la validación
+        self.scoreClasificacion = r2_score(Y_test, Y_Pronostico)
+
+
+
+        #validacion del modelo
+
+        self.matrizImportancia = pd.DataFrame({'Variable': list(self.empresaHistModelo[self.columnasTrasEliminar]),
+                            'Importancia': PronosticoAD.feature_importances_}).sort_values('Importancia', ascending=False)
+
+
+
+
+        #Pronostico de las acciones
+        plt.figure(figsize=(20, 5))
+        plt.plot(Y_test, color='red', marker='+', label='Real')
+        plt.plot(Y_Pronostico, color='green', marker='+', label='Estimado')
+        plt.xlabel('Fecha')
+        plt.ylabel('Precio de las acciones')
+        plt.title('Pronóstico de las acciones de: '+self.nombreEmpresa)
+        plt.grid(True)
+        plt.legend()
+
+        buffer = BytesIO()
+        plt.savefig(buffer, format='png')
+        buffer.seek(0)
+        image_png = buffer.getvalue()
+        buffer.close()
+
+        graphic = base64.b64encode(image_png)
+        graphic = graphic.decode('utf-8')
+        self.graficaPronosticoAcciones = graphic
+
+        #conformacion del arbol
+        plt.figure(figsize=(16,16))  
+        plot_tree(PronosticoAD, feature_names = self.columnasTrasEliminar)
+
+        buffer = BytesIO()
+        plt.savefig(buffer, format='png')
+        buffer.seek(0)
+        image_png = buffer.getvalue()
+        buffer.close()
+
+        graphic = base64.b64encode(image_png)
+        graphic = graphic.decode('utf-8')
+        self.graficaArbol = graphic
+
+        return self
+
+    def calculoItemPronostico(self, itemDataframe):
+        #division de los datos de entrenamiento y validacion
+        arrayX = np.array(self.predictoras)
+        arrayY = np.array(self.clase)
+        X_train, X_test, Y_train, Y_test = model_selection.train_test_split(arrayX, arrayY, 
+                                                                    test_size = 0.2, 
+                                                                    random_state = 0, 
+                                                                    shuffle = True)
+
+        #Se entrena el modelo a partir de los datos de entrada
+        PronosticoAD = DecisionTreeRegressor(max_depth=9, min_samples_split=8, min_samples_leaf=4, random_state=0)
+        PronosticoAD.fit(X_train, Y_train)
+
+        #Se genera el pronóstico
+        Y_Pronostico = PronosticoAD.predict(X_test)
+
+        #Se calcula la exactitud promedio de la validación
+        self.scoreClasificacion = r2_score(Y_test, Y_Pronostico)
+
+
+
+
+        #Item a calcular para clasificar
+        itemACalcular = itemDataframe
+
+
+        #arroja, en numero, el pronostico
+        resultadoClasificacion = float(PronosticoAD.predict(itemACalcular))
+        self.resultadoCalculoItem = resultadoClasificacion
 
         return self
