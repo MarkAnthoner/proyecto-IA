@@ -55,9 +55,13 @@ from .clasificacion import clasificacion
 from sklearn.metrics import RocCurveDisplay
 
 
-#import pronosticoArbol
+#import pronosticoArbol y Bosque
 from .arbolPronostico import arbolPronostico
 from .bosquePronostico import bosquePronostico
+
+#import clasificacion Arbol y Bosque
+from .arbolClasificacion import arbolClasificacion
+from .bosqueClasificacion import bosqueClasificacion
 
 
 
@@ -108,9 +112,16 @@ listaEmpresasPronosticoArbol = ['GRUMAB.MX', 'BIMBOA.MX', 'FMX', 'CX', 'AMZN', '
 listaEmpresasPronosticoBosque = ['GRUMAB.MX', 'BIMBOA.MX', 'FMX', 'CX', 'AMZN', 'HSBC', 'C', 'BBVA','AAPL']
 #GRUMAB.MX (Maiz y tortilla), BIMBOA.MX, FMX (FEMSA: refrescos), CX (CEMEX)
 objetoBosquePronostico = bosquePronostico(variableNombreArbolYbosque)
+objetoArbolClasificacion = arbolClasificacion(variableNombreArbolYbosque)
+objetoBosqueClasificacion = bosqueClasificacion(variableNombreArbolYbosque)
 
 accesoValidadoArbolPronostico = False
 accesoValidadoBosquePronostico = False
+accesoValidadoArbolClasificacion = False
+accesoValidadoBosqueClasificacion = False
+
+graficoDispersionArbolClasificacionGuardado = 0
+graficoDispersionBosqueClasificacionGuardado = 0
 
 
 
@@ -788,7 +799,6 @@ def validacionClustering(request):
 
             return 0
 
-
 def eliminarDataSetClustering(request):
     global accesoValidadoClustering
     if(accesoValidadoClustering == True):
@@ -1175,7 +1185,6 @@ def validacionClasificacion(request):
 
             return 0
 
-
 def eliminarDataSetClasificacion(request):
     global accesoValidadoClasificacion
     if(accesoValidadoClasificacion == True):
@@ -1188,7 +1197,6 @@ def eliminarDataSetClasificacion(request):
         #si el acceso ya no es validado, se manda directamente al inicio
         accesoValidadoClasificacion = False
         return render(request, 'views/clasificacion/subirClasificacion.html')
-
 
 def graficoDispersionPrueba(datosClase, variableClase):
     global graficoDispersionClasificacionGuardado
@@ -1240,11 +1248,19 @@ def graficoCurvaROC():
 def validacionArbolYbosque(request):
     global accesoSeleccionPronosticoClasificacion
     global variableNombreArbolYbosque
+
     global objetoArbolPronostico
     global objetoBosquePronostico
+    global objetoArbolClasificacion
+    global objetoBosqueClasificacion
 
     global accesoValidadoArbolPronostico
     global accesoValidadoBosquePronostico
+    global accesoValidadoArbolClasificacion
+    global accesoValidadoBosqueClasificacion
+
+    global graficoDispersionArbolClasificacionGuardado
+    global graficoDispersionBosqueClasificacionGuardado
 
     global listaEmpresasPronosticoArbol
     global listaEmpresasPronosticoBosque
@@ -1257,7 +1273,13 @@ def validacionArbolYbosque(request):
             return render(request, 'views/arbolYbosque/seleccionarClasPred.html')
         elif (accesoSeleccionPronosticoClasificacion == 1): #segunda capa "seleccionTipo = 1"
             accesoSeleccionPronosticoClasificacion = 2 #se pasa a la tercera capa "seleccionArbolBosque = 2"
-            return render(request, 'views/arbolYbosque/prediccion/selectArbolBosque.html')
+
+            #si se selecciona la parte de pronostico
+            if request.GET["form-tipo-pronostico-clasificacion"] == "pronostico":
+                return render(request, 'views/arbolYbosque/prediccion/selectArbolBosque.html')
+            
+            if request.GET["form-tipo-pronostico-clasificacion"] == "clasificacion":
+                return render(request, 'views/arbolYbosque/clasificacion/selectArbolBosque.html')
 
         #capa que trata de seleccionar hacia donde reedirigirse
         elif (accesoSeleccionPronosticoClasificacion == 2): #capa de "direccionamiento de vistas"
@@ -1311,6 +1333,10 @@ def validacionArbolYbosque(request):
 
 
 
+
+
+
+
             #seccion en donde se imprime el calculo de un item de bosque pronostico
             if request.GET["form-tipo-arbol-bosque"] == "form-calculo-item-bosque-pronostico":
                 return render(request, 'views/arbolYbosque/prediccion/bosque/bosquePronostico.html', {
@@ -1355,6 +1381,114 @@ def validacionArbolYbosque(request):
                     return render(request, 'views/arbolYbosque/prediccion/bosque/subirBosque.html', {
                         'listaEmpresas':listaEmpresasPronosticoBosque,
                     })
+
+
+
+
+
+
+
+
+            #seccion en donde se imprime el calculo de un item de arbol clasificacion
+            if request.GET["form-tipo-arbol-bosque"] == "form-calculo-item-arbol-clasificacion":
+                mapaCalorGenerado = generarMapaMetricas(objetoArbolClasificacion.matrizInf, objetoArbolClasificacion.datosDF)
+                return render(request, 'views/arbolYbosque/clasificacion/arbol/arbolClasificacion.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoArbolClasificacion.datosColumnas,
+                    'displaySeleccion':"none",
+                    'displayClase':"none",
+                    'displayPredictoras':"none",
+                    'display':"block",
+
+                    'dataFrameConteoClasificacion': objetoArbolClasificacion.agrupamientoClasificacion,
+                    'dataFrameImportancia': objetoArbolClasificacion.matrizImportancia,
+                    'dataFrameValidacion': objetoArbolClasificacion.matrizValidacion,
+                    'graficoDispersionPrueba':graficoDispersionArbolClasificacionGuardado,
+                    'graficoArbol':objetoArbolClasificacion.graficaArbol,
+                    'scoreRegresionLineal':objetoArbolClasificacion.scoreClasificacion,
+                    'curvaROC': objetoArbolClasificacion.curvaROC,
+                    'calculoItem':'no',
+                    'resultadoClasificacion':'',
+                })
+
+            if request.GET["form-tipo-arbol-bosque"] == 'arbol-clasificacion':
+                #si se quiere ingresar al arbol clasificacion, se ve si a seleccionar dataset o a los resultados
+                if (accesoValidadoArbolClasificacion == True):
+                    mapaCalorGenerado = generarMapaMetricas(objetoArbolClasificacion.matrizInf, objetoArbolClasificacion.datosDF)
+                    return render(request, 'views/arbolYbosque/clasificacion/arbol/arbolClasificacion.html', {
+                        'mapaCalor':mapaCalorGenerado,
+                        'listaColumnas':objetoArbolClasificacion.datosColumnas,
+                        'displaySeleccion':"none",
+                        'displayClase':"none",
+                        'displayPredictoras':"none",
+                        'display':"block",
+
+                        'dataFrameConteoClasificacion': objetoArbolClasificacion.agrupamientoClasificacion,
+                        'dataFrameImportancia': objetoArbolClasificacion.matrizImportancia,
+                        'dataFrameValidacion': objetoArbolClasificacion.matrizValidacion,
+                        'graficoDispersionPrueba':graficoDispersionArbolClasificacionGuardado,
+                        'graficoArbol':objetoArbolClasificacion.graficaArbol,
+                        'scoreRegresionLineal':objetoArbolClasificacion.scoreClasificacion,
+                        'curvaROC': objetoArbolClasificacion.curvaROC,
+                        'calculoItem':'no',
+                        'resultadoClasificacion':'',
+                    })       
+                else:
+                    return render(request, 'views/arbolYbosque/clasificacion/arbol/subirArbol.html')
+
+
+
+
+
+
+
+
+
+            #seccion en donde se imprime el calculo de un item de bosque clasificacion
+            if request.GET["form-tipo-arbol-bosque"] == "form-calculo-item-bosque-clasificacion":
+                mapaCalorGenerado = generarMapaMetricas(objetoBosqueClasificacion.matrizInf, objetoBosqueClasificacion.datosDF)
+                return render(request, 'views/arbolYbosque/clasificacion/bosque/bosqueClasificacion.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoBosqueClasificacion.datosColumnas,
+                    'displaySeleccion':"none",
+                    'displayClase':"none",
+                    'displayPredictoras':"none",
+                    'display':"block",
+
+                    'dataFrameConteoClasificacion': objetoBosqueClasificacion.agrupamientoClasificacion,
+                    'dataFrameImportancia': objetoBosqueClasificacion.matrizImportancia,
+                    'dataFrameValidacion': objetoBosqueClasificacion.matrizValidacion,
+                    'graficoDispersionPrueba':graficoDispersionBosqueClasificacionGuardado,
+                    'scoreRegresionLineal':objetoBosqueClasificacion.scoreClasificacion,
+                    'curvaROC': objetoBosqueClasificacion.curvaROC,
+                    'calculoItem':'no',
+                    'resultadoClasificacion':'',
+                })
+
+            if request.GET["form-tipo-arbol-bosque"] == 'bosque-clasificacion':
+                if (accesoValidadoBosqueClasificacion == True):
+                    mapaCalorGenerado = generarMapaMetricas(objetoBosqueClasificacion.matrizInf, objetoBosqueClasificacion.datosDF)
+                    return render(request, 'views/arbolYbosque/clasificacion/bosque/bosqueClasificacion.html', {
+                        'mapaCalor':mapaCalorGenerado,
+                        'listaColumnas':objetoBosqueClasificacion.datosColumnas,
+                        'displaySeleccion':"none",
+                        'displayClase':"none",
+                        'displayPredictoras':"none",
+                        'display':"block",
+
+                        'dataFrameConteoClasificacion': objetoBosqueClasificacion.agrupamientoClasificacion,
+                        'dataFrameImportancia': objetoBosqueClasificacion.matrizImportancia,
+                        'dataFrameValidacion': objetoBosqueClasificacion.matrizValidacion,
+                        'graficoDispersionPrueba':graficoDispersionBosqueClasificacionGuardado,
+                        'scoreRegresionLineal':objetoBosqueClasificacion.scoreClasificacion,
+                        'curvaROC': objetoBosqueClasificacion.curvaROC,
+                        'calculoItem':'no',
+                        'resultadoClasificacion':'',
+                    })       
+                else:
+                    return render(request, 'views/arbolYbosque/clasificacion/bosque/subirBosque.html')
+
+
 
 
     else: 
@@ -1410,7 +1544,6 @@ def validacionArbolYbosque(request):
                 'display':"none",
             })
         
-        #datos para algoritmo bosque pronostico
         if request.POST["form-tipo"] == 'form-seleccion-bosque-pronostico':
 
             #permito que solo seleccione una empresa
@@ -1458,6 +1591,73 @@ def validacionArbolYbosque(request):
                 'display':"none",
             })
 
+        if request.POST["form-tipo"] == 'form-seleccion-arbol-clasificacion':
+            myfile = request.FILES['archivo-arbol']
+            fs = FileSystemStorage()
+
+            nombreArchivo = myfile.name
+            variableNombreArbolYbosque = nombreArchivo
+
+            #se pone el directorio completo
+            directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/arbolYbosque/arbol/'+nombreArchivo)
+
+            #se coloca el directorio y el nombre del archivo
+            filename = fs.save(directorio, myfile)
+            uploaded_file_url = fs.url(filename)
+
+
+            objetoArbolClasificacion = arbolClasificacion(variableNombreArbolYbosque)
+            #generamos la matriz inferior
+            objetoArbolClasificacion = objetoArbolClasificacion.mapaCalor()
+
+
+            """Poner parte de la impresion en pantalla"""
+            #llamamos al metodo de este archivo que genera el grafico tomando la matriz inferior
+            mapaCalorGenerado = generarMapaMetricas(objetoArbolClasificacion.matrizInf, objetoArbolClasificacion.datosDF)
+
+
+            return render(request, 'views/arbolYbosque/clasificacion/arbol/arbolClasificacion.html', {
+                'mapaCalor':mapaCalorGenerado,
+                'listaColumnas':objetoArbolClasificacion.datosColumnas,
+                'displaySeleccion':"block",
+                'displayClase':"block",
+                'displayPredictoras':"none",
+                'display':"none",
+            })
+
+        if request.POST["form-tipo"] == 'form-seleccion-bosque-clasificacion':
+            myfile = request.FILES['archivo-bosque']
+            fs = FileSystemStorage()
+
+            nombreArchivo = myfile.name
+            variableNombreArbolYbosque = nombreArchivo
+
+            #se pone el directorio completo
+            directorio = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Datos/arbolYbosque/bosque/'+nombreArchivo)
+
+            #se coloca el directorio y el nombre del archivo
+            filename = fs.save(directorio, myfile)
+            uploaded_file_url = fs.url(filename)
+
+
+            objetoBosqueClasificacion = bosqueClasificacion(variableNombreArbolYbosque)
+            #generamos la matriz inferior
+            objetoBosqueClasificacion = objetoBosqueClasificacion.mapaCalor()
+
+
+            """Poner parte de la impresion en pantalla"""
+            #llamamos al metodo de este archivo que genera el grafico tomando la matriz inferior
+            mapaCalorGenerado = generarMapaMetricas(objetoBosqueClasificacion.matrizInf, objetoBosqueClasificacion.datosDF)
+
+
+            return render(request, 'views/arbolYbosque/clasificacion/bosque/bosqueClasificacion.html', {
+                'mapaCalor':mapaCalorGenerado,
+                'listaColumnas':objetoBosqueClasificacion.datosColumnas,
+                'displaySeleccion':"block",
+                'displayClase':"block",
+                'displayPredictoras':"none",
+                'display':"none",
+            })
 
 
 
@@ -1651,6 +1851,7 @@ def validacionArbolYbosque(request):
 
 
 
+
         """Variable clase de Bosque Pronostico"""
         #seleccionar la variable clase de Bosque Pronostico
         if request.POST["form-tipo"] == 'form-seleccion-clase-bosque-pronostico':
@@ -1840,6 +2041,433 @@ def validacionArbolYbosque(request):
 
 
 
+
+
+
+
+        
+
+        #Arbol de clasificacion
+        if request.POST["form-tipo"] == 'form-seleccion-clase-arbol-clasificacion':
+            """Con todo esto me di cuenta de que en el form sin seleccionar casillas, se tienen tres elementos unicamente"""
+            """
+            print()
+            print()
+            print(len(request.POST))
+            print(request.POST)
+            print()
+            print() """
+
+            #si no se seleccionó alguna caracteristica, o si se seleccionó más de 1, se vuelve a preguntar
+            if(len(request.POST) <= 3 or len(request.POST) >=5):
+                mapaCalorGenerado = generarMapaMetricas(objetoArbolClasificacion.matrizInf, objetoArbolClasificacion.datosDF)
+                print()
+                print("Se vuelve a preguntar por la variable clase")
+                print()
+                return render(request, 'views/arbolYbosque/clasificacion/arbol/arbolClasificacion.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoArbolClasificacion.datosColumnas,
+                    'displaySeleccion':"block",
+                    'displayClase':"block",
+                    'displayPredictoras':"none",
+                    'display':"none",
+                })
+            else:
+                print()
+                print("Se procesa la clase")
+                print()
+
+                diccionarioCaracteristicas = request.POST
+                listaCaracteristicas = []
+                tamanioDiccionario = len(request.POST)
+
+                for key in diccionarioCaracteristicas:
+                    listaCaracteristicas.append(diccionarioCaracteristicas[key])
+
+                #solo se toman las características seleccionadas
+                tamanioLista = tamanioDiccionario - 2
+                listaCaracteristicas = listaCaracteristicas[1:tamanioLista]
+                print(listaCaracteristicas)
+                print()
+
+                #tomo la variable clase y se elimina de las columnas
+                objetoArbolClasificacion = objetoArbolClasificacion.filtrarClase(listaCaracteristicas)
+                objetoArbolClasificacion.variableClase = listaCaracteristicas.pop(0)
+                #print(objetoArbolClasificacion.variableClase)
+
+                mapaCalorGenerado = generarMapaMetricas(objetoArbolClasificacion.matrizInf, objetoArbolClasificacion.datosDF)
+                return render(request, 'views/arbolYbosque/clasificacion/arbol/arbolClasificacion.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoArbolClasificacion.datosColumnas,
+                    'displaySeleccion':"block",
+                    'displayClase':"none",
+                    'displayPredictoras':"block",
+                    'display':"none",
+                })
+
+        if request.POST["form-tipo"] == 'form-seleccion-predictoras-arbol-clasificacion':
+            """Con todo esto me di cuenta de que en el form sin seleccionar casillas, se tienen tres elementos unicamente"""
+            """
+            print()
+            print()
+            print(len(request.POST))
+            print(request.POST)
+            print()
+            print() """
+
+            #si no se seleccionó alguna caracteristica, se vuelve a preguntar
+
+            #permito que se pueda continuar sin haber eliminado alguna caracteristica
+            if(len(request.POST) < 3 ):
+                mapaCalorGenerado = generarMapaMetricas(objetoArbolClasificacion.matrizInf, objetoArbolClasificacion.datosDF)
+                print()
+                print("Se vuelve a preguntar por las caracteristicas")
+                print()
+                return render(request, 'views/arbolYbosque/clasificacion/arbol/arbolClasificacion.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoArbolClasificacion.datosColumnas,
+                    'displaySeleccion':"block",
+                    'displayClase':"none",
+                    'displayPredictoras':"block",
+                    'display':"none",
+                })
+
+            else:
+                print()
+                print("Se procesan las predictoras")
+                print()
+
+                accesoValidadoArbolClasificacion = True
+
+                diccionarioCaracteristicas = request.POST
+                listaCaracteristicas = []
+                tamanioDiccionario = len(request.POST)
+                print(diccionarioCaracteristicas)
+
+                for key in diccionarioCaracteristicas:
+                    listaCaracteristicas.append(diccionarioCaracteristicas[key])
+
+                #solo se toman las características seleccionadas
+                tamanioLista = tamanioDiccionario - 2
+                listaCaracteristicas = listaCaracteristicas[1:tamanioLista]
+                print(listaCaracteristicas)
+                print()
+
+
+                #eliminar las características
+                objetoArbolClasificacion = objetoArbolClasificacion.filtrarDatos(listaCaracteristicas)
+
+
+
+                #obtener las variables clase y predictoras
+                objetoArbolClasificacion = objetoArbolClasificacion.variablesClaseyPredictoras()
+
+                #generar el grafico de dispersion de prueba
+                grafico = graficoDispersionArbolClasificacion(objetoArbolClasificacion.predictoras, objetoArbolClasificacion.variableClase)
+
+
+                objetoArbolClasificacion = objetoArbolClasificacion.aplicacionAlgoritmo()
+                
+                
+                #aquí se ha seleccionado alguna característica
+                mapaCalorGenerado = generarMapaMetricas(objetoArbolClasificacion.matrizInf, objetoArbolClasificacion.datosDF)
+                return render(request, 'views/arbolYbosque/clasificacion/arbol/arbolClasificacion.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoArbolClasificacion.datosColumnas,
+                    'displaySeleccion':"none",
+                    'displayClase':"none",
+                    'displayPredictoras':"none",
+                    'display':"block",
+
+                    'dataFrameConteoClasificacion': objetoArbolClasificacion.agrupamientoClasificacion,
+                    'dataFrameImportancia': objetoArbolClasificacion.matrizImportancia,
+                    'dataFrameValidacion': objetoArbolClasificacion.matrizValidacion,
+                    'graficoDispersionPrueba':grafico,
+                    'graficoArbol':objetoArbolClasificacion.graficaArbol,
+                    'scoreRegresionLineal':objetoArbolClasificacion.scoreClasificacion,
+                    'curvaROC': objetoArbolClasificacion.curvaROC,
+                    'calculoItem':'no',
+                    'resultadoClasificacion':'',
+                })
+                
+        if request.POST["form-tipo"] == 'form-calculo-item-arbol-clasificacion':
+
+                diccionarioCaracteristicas = request.POST
+                listaValores = []
+                tamanioDiccionario = len(request.POST)
+
+                for key in diccionarioCaracteristicas:
+                    listaValores.append(diccionarioCaracteristicas[key])
+
+                #solo se toman las características seleccionadas
+                tamanioLista = tamanioDiccionario - 2
+                listaValores = listaValores[1:tamanioLista]
+
+                #se obtienen los valores en flotante y en Indice
+                listaValoresValidos = [[float(el)] for el in listaValores]
+
+                #creacion de la lista de listas con el nombre de las variables y los valores en Indices
+                i = 0
+                listaParaData = []
+                combinacion = []
+                for x in objetoArbolClasificacion.datosColumnas:
+                    combinacion.append(x)
+                    combinacion.append(listaValoresValidos[i])
+                    listaParaData.append(combinacion)
+                    
+                    combinacion = []
+                    i = i + 1
+                #listaParaData
+
+                #creacion del diccionario para pasarlo al dataFrame
+                diccionarioParaDataFrame = {}
+
+                for sublista in listaParaData:
+                    diccionarioParaDataFrame[sublista[0]] = sublista[1]    
+                #diccionarioParaDataFrame
+
+                #ejecucion del calculo de la clasificacion del item
+                dataframeItemIngresado = pd.DataFrame(diccionarioParaDataFrame)
+
+                #se calcula la clasificacion del item mandando un dataframe
+                objetoArbolClasificacion = objetoArbolClasificacion.calculoItemClasificacion(dataframeItemIngresado)
+                
+                mapaCalorGenerado = generarMapaMetricas(objetoArbolClasificacion.matrizInf, objetoArbolClasificacion.datosDF)
+                return render(request, 'views/arbolYbosque/clasificacion/arbol/arbolClasificacion.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoArbolClasificacion.datosColumnas,
+                    'displaySeleccion':"none",
+                    'displayClase':"none",
+                    'displayPredictoras':"none",
+                    'display':"block",
+
+                    'dataFrameConteoClasificacion': objetoArbolClasificacion.agrupamientoClasificacion,
+                    'dataFrameImportancia': objetoArbolClasificacion.matrizImportancia,
+                    'dataFrameValidacion': objetoArbolClasificacion.matrizValidacion,
+                    'graficoDispersionPrueba':graficoDispersionArbolClasificacionGuardado,
+                    'graficoArbol':objetoArbolClasificacion.graficaArbol,
+                    'scoreRegresionLineal':objetoArbolClasificacion.scoreClasificacion,
+                    'curvaROC': objetoArbolClasificacion.curvaROC,
+                    'calculoItem':'si',
+                    'resultadoClasificacion':objetoArbolClasificacion.resultadoCalculoItem,
+                })
+
+
+
+
+
+
+
+
+        #Bosque de clasificacion
+        if request.POST["form-tipo"] == 'form-seleccion-clase-bosque-clasificacion':
+            """Con todo esto me di cuenta de que en el form sin seleccionar casillas, se tienen tres elementos unicamente"""
+            """
+            print()
+            print()
+            print(len(request.POST))
+            print(request.POST)
+            print()
+            print() """
+
+            #si no se seleccionó alguna caracteristica, o si se seleccionó más de 1, se vuelve a preguntar
+            if(len(request.POST) <= 3 or len(request.POST) >=5):
+                mapaCalorGenerado = generarMapaMetricas(objetoBosqueClasificacion.matrizInf, objetoBosqueClasificacion.datosDF)
+                print()
+                print("Se vuelve a preguntar por la variable clase")
+                print()
+                return render(request, 'views/arbolYbosque/clasificacion/bosque/bosqueClasificacion.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoBosqueClasificacion.datosColumnas,
+                    'displaySeleccion':"block",
+                    'displayClase':"block",
+                    'displayPredictoras':"none",
+                    'display':"none",
+                })
+            else:
+                print()
+                print("Se procesa la clase")
+                print()
+
+                diccionarioCaracteristicas = request.POST
+                listaCaracteristicas = []
+                tamanioDiccionario = len(request.POST)
+
+                for key in diccionarioCaracteristicas:
+                    listaCaracteristicas.append(diccionarioCaracteristicas[key])
+
+                #solo se toman las características seleccionadas
+                tamanioLista = tamanioDiccionario - 2
+                listaCaracteristicas = listaCaracteristicas[1:tamanioLista]
+                print(listaCaracteristicas)
+                print()
+
+                #tomo la variable clase y se elimina de las columnas
+                objetoBosqueClasificacion = objetoBosqueClasificacion.filtrarClase(listaCaracteristicas)
+                objetoBosqueClasificacion.variableClase = listaCaracteristicas.pop(0)
+                #print(objetoArbolClasificacion.variableClase)
+
+                mapaCalorGenerado = generarMapaMetricas(objetoBosqueClasificacion.matrizInf, objetoBosqueClasificacion.datosDF)
+                return render(request, 'views/arbolYbosque/clasificacion/bosque/bosqueClasificacion.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoBosqueClasificacion.datosColumnas,
+                    'displaySeleccion':"block",
+                    'displayClase':"none",
+                    'displayPredictoras':"block",
+                    'display':"none",
+                })
+
+        if request.POST["form-tipo"] == 'form-seleccion-predictoras-bosque-clasificacion':
+            """Con todo esto me di cuenta de que en el form sin seleccionar casillas, se tienen tres elementos unicamente"""
+            """
+            print()
+            print()
+            print(len(request.POST))
+            print(request.POST)
+            print()
+            print() """
+
+            #si no se seleccionó alguna caracteristica, se vuelve a preguntar
+
+            #permito que se pueda continuar sin haber eliminado alguna caracteristica
+            if(len(request.POST) < 3 ):
+                mapaCalorGenerado = generarMapaMetricas(objetoBosqueClasificacion.matrizInf, objetoBosqueClasificacion.datosDF)
+                print()
+                print("Se vuelve a preguntar por las caracteristicas")
+                print()
+                return render(request, 'views/arbolYbosque/clasificacion/bosque/bosqueClasificacion.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoBosqueClasificacion.datosColumnas,
+                    'displaySeleccion':"block",
+                    'displayClase':"none",
+                    'displayPredictoras':"block",
+                    'display':"none",
+                })
+
+            else:
+                print()
+                print("Se procesan las predictoras")
+                print()
+
+                accesoValidadoBosqueClasificacion = True
+
+                diccionarioCaracteristicas = request.POST
+                listaCaracteristicas = []
+                tamanioDiccionario = len(request.POST)
+                print(diccionarioCaracteristicas)
+
+                for key in diccionarioCaracteristicas:
+                    listaCaracteristicas.append(diccionarioCaracteristicas[key])
+
+                #solo se toman las características seleccionadas
+                tamanioLista = tamanioDiccionario - 2
+                listaCaracteristicas = listaCaracteristicas[1:tamanioLista]
+                print(listaCaracteristicas)
+                print()
+
+
+                #eliminar las características
+                objetoBosqueClasificacion = objetoBosqueClasificacion.filtrarDatos(listaCaracteristicas)
+
+
+
+                #obtener las variables clase y predictoras
+                objetoBosqueClasificacion = objetoBosqueClasificacion.variablesClaseyPredictoras()
+
+                #generar el grafico de dispersion de prueba
+                grafico = graficoDispersionBosqueClasificacion(objetoBosqueClasificacion.predictoras, objetoBosqueClasificacion.variableClase)
+
+
+                objetoBosqueClasificacion = objetoBosqueClasificacion.aplicacionAlgoritmo()
+                
+                
+                #aquí se ha seleccionado alguna característica
+                mapaCalorGenerado = generarMapaMetricas(objetoBosqueClasificacion.matrizInf, objetoBosqueClasificacion.datosDF)
+                return render(request, 'views/arbolYbosque/clasificacion/bosque/bosqueClasificacion.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoBosqueClasificacion.datosColumnas,
+                    'displaySeleccion':"none",
+                    'displayClase':"none",
+                    'displayPredictoras':"none",
+                    'display':"block",
+
+                    'dataFrameConteoClasificacion': objetoBosqueClasificacion.agrupamientoClasificacion,
+                    'dataFrameImportancia': objetoBosqueClasificacion.matrizImportancia,
+                    'dataFrameValidacion': objetoBosqueClasificacion.matrizValidacion,
+                    'graficoDispersionPrueba':graficoDispersionBosqueClasificacionGuardado,
+                    'scoreRegresionLineal':objetoBosqueClasificacion.scoreClasificacion,
+                    'curvaROC': objetoBosqueClasificacion.curvaROC,
+                    'calculoItem':'no',
+                    'resultadoClasificacion':'',
+                })
+                
+        if request.POST["form-tipo"] == 'form-calculo-item-bosque-clasificacion':
+
+                diccionarioCaracteristicas = request.POST
+                listaValores = []
+                tamanioDiccionario = len(request.POST)
+
+                for key in diccionarioCaracteristicas:
+                    listaValores.append(diccionarioCaracteristicas[key])
+
+                #solo se toman las características seleccionadas
+                tamanioLista = tamanioDiccionario - 2
+                listaValores = listaValores[1:tamanioLista]
+
+                #se obtienen los valores en flotante y en Indice
+                listaValoresValidos = [[float(el)] for el in listaValores]
+
+                #creacion de la lista de listas con el nombre de las variables y los valores en Indices
+                i = 0
+                listaParaData = []
+                combinacion = []
+                for x in objetoBosqueClasificacion.datosColumnas:
+                    combinacion.append(x)
+                    combinacion.append(listaValoresValidos[i])
+                    listaParaData.append(combinacion)
+                    
+                    combinacion = []
+                    i = i + 1
+                #listaParaData
+
+                #creacion del diccionario para pasarlo al dataFrame
+                diccionarioParaDataFrame = {}
+
+                for sublista in listaParaData:
+                    diccionarioParaDataFrame[sublista[0]] = sublista[1]    
+                #diccionarioParaDataFrame
+
+                #ejecucion del calculo de la clasificacion del item
+                dataframeItemIngresado = pd.DataFrame(diccionarioParaDataFrame)
+
+                #se calcula la clasificacion del item mandando un dataframe
+                objetoBosqueClasificacion = objetoBosqueClasificacion.calculoItemClasificacion(dataframeItemIngresado)
+                
+                mapaCalorGenerado = generarMapaMetricas(objetoBosqueClasificacion.matrizInf, objetoBosqueClasificacion.datosDF)
+                return render(request, 'views/arbolYbosque/clasificacion/bosque/bosqueClasificacion.html', {
+                    'mapaCalor':mapaCalorGenerado,
+                    'listaColumnas':objetoBosqueClasificacion.datosColumnas,
+                    'displaySeleccion':"none",
+                    'displayClase':"none",
+                    'displayPredictoras':"none",
+                    'display':"block",
+
+                    'dataFrameConteoClasificacion': objetoBosqueClasificacion.agrupamientoClasificacion,
+                    'dataFrameImportancia': objetoBosqueClasificacion.matrizImportancia,
+                    'dataFrameValidacion': objetoBosqueClasificacion.matrizValidacion,
+                    'graficoDispersionPrueba':graficoDispersionBosqueClasificacionGuardado,
+                    'scoreRegresionLineal':objetoBosqueClasificacion.scoreClasificacion,
+                    'curvaROC': objetoBosqueClasificacion.curvaROC,
+                    'calculoItem':'si',
+                    'resultadoClasificacion':objetoBosqueClasificacion.resultadoCalculoItem,
+                })
+
+
+
+
+
+
+
         #elif 'form-reporte' in request.POST:
         if request.POST["form-tipo"] == 'form-reporte':
             """Logica de generacion de reporte"""
@@ -1853,7 +2481,6 @@ def validacionArbolYbosque(request):
             
 
         return 0
-
 
 def eliminarDataSetArbolPronostico(request):
     global accesoValidadoArbolPronostico
@@ -1881,6 +2508,83 @@ def eliminarDataSetBosquePronostico(request):
         accesoValidadoBosquePronostico = False
         return render(request, 'views/clasificacion/subirClasificacion.html')
 
+def eliminarDataSetArbolClasificacion(request):
+    global accesoValidadoArbolClasificacion
+    if(accesoValidadoArbolClasificacion == True):
+        accesoValidadoArbolClasificacion = False
+
+        """#Falta agregar logica de eliminar archivo CSV"""
+        #return render(request, 'views/subirApriori.html')
+        return HttpResponseRedirect(reverse('index'))
+    else:
+        #si el acceso ya no es validado, se manda directamente al inicio
+        accesoValidadoArbolClasificacion = False
+        return render(request, 'views/index.html')
+
+def eliminarDataSetBosqueClasificacion(request):
+    global accesoValidadoBosqueClasificacion
+    if(accesoValidadoBosqueClasificacion == True):
+        accesoValidadoBosqueClasificacion = False
+
+        """#Falta agregar logica de eliminar archivo CSV"""
+        #return render(request, 'views/subirApriori.html')
+        return HttpResponseRedirect(reverse('index'))
+    else:
+        #si el acceso ya no es validado, se manda directamente al inicio
+        accesoValidadoBosqueClasificacion = False
+        return render(request, 'views/index.html')
+
+def graficoDispersionArbolClasificacion(datosClase, variableClase):
+    global graficoDispersionArbolClasificacionGuardado
+    global objetoArbolClasificacion
+    arrayDatosClase = np.array(datosClase)
+
+    #se localiza el mejor numero de clusters con kneed
+    plt.figure(figsize=(10, 7))
+    plt.scatter(arrayDatosClase[:,0], arrayDatosClase[:,1], c = objetoArbolClasificacion.datosDataFrameFiltrados[objetoArbolClasificacion.variableClase])
+    #plt.scatter(arrayDatosClase[:,0], arrayDatosClase[:,1], c = objetoClasificacion.datosDataFrameFiltrados.Diagnosis)
+    plt.grid()
+    plt.xlabel(objetoArbolClasificacion.datosColumnas[0])
+    plt.ylabel(objetoArbolClasificacion.datosColumnas[1])
+    
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+
+    graphic = base64.b64encode(image_png)
+    graphic = graphic.decode('utf-8')
+
+    graficoDispersionArbolClasificacionGuardado = graphic
+
+    return graphic
+
+def graficoDispersionBosqueClasificacion(datosClase, variableClase):
+    global graficoDispersionBosqueClasificacionGuardado
+    global objetoBosqueClasificacion
+    arrayDatosClase = np.array(datosClase)
+
+    #se localiza el mejor numero de clusters con kneed
+    plt.figure(figsize=(10, 7))
+    plt.scatter(arrayDatosClase[:,0], arrayDatosClase[:,1], c = objetoBosqueClasificacion.datosDataFrameFiltrados[objetoBosqueClasificacion.variableClase])
+    #plt.scatter(arrayDatosClase[:,0], arrayDatosClase[:,1], c = objetoClasificacion.datosDataFrameFiltrados.Diagnosis)
+    plt.grid()
+    plt.xlabel(objetoBosqueClasificacion.datosColumnas[0])
+    plt.ylabel(objetoBosqueClasificacion.datosColumnas[1])
+    
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+
+    graphic = base64.b64encode(image_png)
+    graphic = graphic.decode('utf-8')
+
+    graficoDispersionBosqueClasificacionGuardado = graphic
+
+    return graphic
 
 
 def getData(request):

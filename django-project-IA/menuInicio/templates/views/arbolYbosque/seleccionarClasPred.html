@@ -24,14 +24,28 @@
               <img src="{% static 'img/pronostico2.png' %}">
               <h4>Pronóstico</h4>
               <p>Algoritmos de pronóstico</p>
-              <a href="{% url 'arbolYbosque-validacion' %}">Ingresa</a>
+              <form action="/arbolYbosque/algoritmo" method="get" id="form-pronostico"> 
+                {% csrf_token %}
+
+                <input type="hidden" name="form-tipo-pronostico-clasificacion" value="pronostico">
+
+                <label for="valorPronostico" class="custom-file-form-ap">Ingresa</label>
+                <input class="boton-centro" type="submit" name="pronostico" value="pronostico" id="valorPronostico" >
+              </form>
           </div>
           
           <div class="card">
               <img src="{% static 'img/clasificacion.png' %}">
               <h4>Clasificación</h4>
               <p>Algoritmo de clasificación</p>
-              <a href="{% url 'metricas-distancia-validacion' %}">Ingresar</a>
+              <form action="/arbolYbosque/algoritmo" method="get" id="form-clasificacion"> 
+                {% csrf_token %}
+
+                <input type="hidden" name="form-tipo-pronostico-clasificacion" value="clasificacion">
+
+                <label for="valorClasificacion" class="custom-file-form-ap">Ingresa</label>
+                <input class="boton-centro" type="submit" name="clasificacion" value="clasificacion" id="valorClasificacion" >
+              </form>
           </div>
           
           

@@ -1,0 +1,263 @@
+{% extends '../../../../layouts/base.html' %}
+
+{% load static %}
+
+
+{%  block content %}
+
+    <div>
+        <h1>Modelo de Clasificación Bosque Aleatorio</h1>
+    </div>
+
+    <div>
+
+        <h1 class="title">Modelo de clasificación</h1>
+
+    </div>
+
+    <div class="contenedor-algoritmo-grid-der" id="contenedor_algoritmo">
+
+        <div class="cardGrid-scroll" style="display: {{displayClase}};">
+            <div>
+                <h2>Variable Clase</h2>
+            </div>
+            <h3>Selección de variable clase (selecciona solo una)</h3>
+            <div class="containerFormularioMetricasSeleccion">    <!-- containerFormularioApriori -->
+                <form class="cardFormMetricas" action="" method="post" id="form-seleccion-clase">
+                    {% csrf_token %}
+                    <div class="contenedor-form-metricas">      <!--  contenedor-form-ap  -->
+
+                        {% for columna in listaColumnas %}
+                            <div class="linea">
+                                <input type="checkbox" id="id_{{ columna }}" name="name_{{ columna }}" value="{{ columna }}">
+                                <label for="id_{{ columna }}"> {{ columna }}</label>
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+                    <input type="hidden" name="form-tipo" value="form-seleccion-clase-bosque-clasificacion">
+
+                    <label for="seleccion-clase" class="custom-file-form-ap">Enviar -></label>
+                    <input class="boton-centro" type="submit" name="form-seleccion-clase-bosque-clasificacion" value="form-seleccion-clase-bosque-clasificacion" id="seleccion-clase" >
+                    
+                </form>
+            </div>
+            
+        </div>
+
+        <div class="cardGrid-scroll" style="display: {{displayPredictoras}};">
+          <div>
+              <h2>Variables Predictoras</h2>
+          </div>
+          <h3>Selección de características (selecciona las variables a eliminar)</h3>
+          <div class="containerFormularioMetricasSeleccion">    <!-- containerFormularioApriori -->
+              <form class="cardFormMetricas" action="" method="post" id="form-seleccion-predictoras">
+                  {% csrf_token %}
+                  <div class="contenedor-form-metricas">      <!--  contenedor-form-ap  -->
+
+                      {% for columna in listaColumnas %}
+                          <div class="linea">
+                              <input type="checkbox" id="id_{{ columna }}" name="name_{{ columna }}" value="{{ columna }}">
+                              <label for="id_{{ columna }}"> {{ columna }}</label>
+                          </div>
+                      {% endfor %}
+
+                  </div>
+
+                  <input type="hidden" name="form-tipo" value="form-seleccion-predictoras-bosque-clasificacion">
+
+                  <label for="seleccion-predictoras" class="custom-file-form-ap">Enviar -></label>
+                  <input class="boton-centro" type="submit" name="form-seleccion-predictoras-bosque-clasificacion" value="form-seleccion-predictoras-bosque-clasificacion" id="seleccion-predictoras" >
+                  
+              </form>
+          </div>
+          
+      </div>
+
+        <div class="cardGrid" style="display: {{displaySeleccion}};">
+          <div>
+              <img src='data:image/png;base64,{{mapaCalor}}' style="width:100%;height:100%; margin-left: 35px;"/>
+          </div>
+        </div>
+
+
+        <div class="cardGrid elemento-abajo" style="display: {{display}}">
+          <h2>Clasificación Bosque Aleatorio</h2>
+          <h3>Gráfico de dispersión</h3>
+
+          <div>
+            <img src='data:image/png;base64,{{graficoDispersionPrueba}}' style="width:110%;height:120%; margin-left: -28px;"/>
+          </div>            
+        </div>
+
+
+        <div id="ejecucion-algoritmo" class="cardGrid-scroll elemento-abajo" style="display: {{display}}">
+            
+
+          <h2>Resultados de la ejecución del algoritmo</h2>
+          <h3>Clasificación por bosque</h3>
+
+          <p style="margin-top: 20px;">Se muestra la exactitud promedio de la validación <b>(Score)</b>.</p>
+          <p style="margin-top: 10px; margin-bottom: 20px; color: rgb(0, 21, 255);">{{scoreRegresionLineal}}</p>
+
+
+          <h3 style="z-index: 3;">Curva ROC</h3>
+          <div>
+            <img src='data:image/png;base64,{{curvaROC}}' style="z-index: 1; width:80%;height:80%; margin-left: -28px;"/>
+          </div> 
+          
+        </div>
+
+
+        <div class="cardGrid-scroll elemento-abajo" style="display: {{display}}">
+          <h2>Conteo de elementos en la clasificacion</h2>
+          <h3>Resumen de agrupamiento en clasificacion</h3>
+
+          <div class="tabla-matriz-clustering" style="margin-top: 40px; margin-left:50px;" >
+            <table style="width:350px; margin-left: 30px;">
+                <tr style="width:350px;">
+                  {% for col in dataFrameConteoClasificacion.columns %}
+                    <td style="width:350px;">
+                      {{col}}
+                    </td>
+                  {% endfor %}
+                </tr>
+                  {% for index, row in dataFrameConteoClasificacion.iterrows %}
+                    <tr style="width:350px;">
+                      {% for cell in row %}
+                        <td style="width:350px;">
+                          {{cell}}
+                        </td>
+                      {% endfor %}
+                    </tr>
+                  {% endfor %}
+            </table>
+          </div>
+
+
+          <h3 style="margin-top: 30px;">Matriz de Validación</h3>
+          <div class="tabla-matriz-clustering" style="margin-top: 40px; margin-left:50px;" >
+            <table style="width:350px; margin-left: 30px;">
+                <tr style="width:350px;">
+                  {% for col in dataFrameValidacion.columns %}
+                    <td style="width:350px;">
+                      {{col}}
+                    </td>
+                  {% endfor %}
+                </tr>
+                  {% for index, row in dataFrameValidacion.iterrows %}
+                    <tr style="width:350px;">
+                      {% for cell in row %}
+                        <td style="width:350px;">
+                          {{cell}}
+                        </td>
+                      {% endfor %}
+                    </tr>
+                  {% endfor %}
+            </table>
+          </div>
+          
+        </div>
+
+
+
+        <div id="ejecucion-algoritmo" class="cardGrid-scroll elemento-abajo" style="display: {{display}}">
+            
+
+            <h2>Resultados del modelo</h2>
+            <h3 style="margin-bottom: 25px;">Matriz de importancia</h3>
+
+            <p style="margin-top: 20px;"> <b>Matriz de Importancia.</b></p>
+            <div class="tabla-matriz-clustering" style="margin-top: 40px; margin: left 20px;" >
+                <table style="width:350px; margin-left: 200px; ">
+                    <tr style="width:350px;">
+                      {% for col in dataFrameImportancia.columns %}
+                        <td style="color: rgb(0, 3, 173); width:350px;">
+                          {{col}}
+                        </td>
+                      {% endfor %}
+                    </tr>
+                      {% for index, row in dataFrameImportancia.iterrows %}
+                        <tr style="width:350px;">
+                          {% for cell in row %}
+                            <td style="width:350px;">
+                              {{cell}}
+                            </td>
+                          {% endfor %}
+                        </tr>
+                      {% endfor %}
+                </table>
+              </div>
+
+      
+        </div>
+
+        <div id="ejecucion-algoritmo" class="cardGrid-scroll elemento-abajo" style="display: {{display}}">
+            
+
+          <h2>Nuevas clasificaciones</h2>
+          <h3>Ingrese valores en las variables para clasificar el elemento</h3>
+
+          {% if calculoItem == 'si' %}
+            
+            <div class="containerFormularioMetricasSeleccion" style="margin-top: 15px;">
+                <p style="margin-top: 50px;">La clasificación dio como resultado que el item subido es:</p>
+                <br>
+                <h3>{{resultadoClasificacion}}</h3>
+
+                <form action="/arbolYbosque/algoritmo" method="get" id="form-resultado-eu"> <!--cardFormMetricas-->
+                    {% csrf_token %}
+
+                    <input type="hidden" name="form-tipo-arbol-bosque" value="form-calculo-item-bosque-clasificacion">
+
+                    <label for="valor-resultado-euclidiana" class="custom-file-form-ap">Calcular otra vez</label>
+                    <input class="boton-centro" type="submit" name="form-calculo-item-bosque-clasificacion" value="form-calculo-item-bosque-clasificacion" id="valor-resultado-euclidiana" >
+                </form>
+            </div>
+
+            {% else %}
+
+            <div class="containerFormularioMetricasSeleccion" style="margin-top: 15px;">
+                <form class="cardFormMetricas" action="" method="post" id="form-calculo-item"> <!--cardFormMetricas-->
+                    <p style="margin-top: -25px; margin-bottom: 20px;">Ingrese valores similares a los items de entrenamiento. </p>
+                    {% csrf_token %}
+                    <div class="contenedor-form-distancia-objetos" style="margin-left: -45px; display: grid;
+                    grid-template-columns: 2fr 2fr;
+                    gap: 1em;"> <!--contenedor-form-metricas-->
+
+                      {% for columna in listaColumnas %}
+                            <div class="linea">
+                                <input type="number" step="0.00001" id="id_{{ columna }}" name="name_{{ columna }}" value="0" style="width: 5em; margin-left: -23px;">
+                                <br>
+                                <label for="id_{{ columna }}" class="valor"> {{ columna }}</label>
+                            </div>
+                      {% endfor %}
+                      <br>
+
+                    </div>
+
+                    <input type="hidden" name="form-tipo" value="form-calculo-item-bosque-clasificacion">
+
+                    <label for="m-euclidiana" class="custom-file-form-ap">Enviar -></label>
+                    <input class="boton-centro" type="submit" name="form-calculo-item-bosque-clasificacion" value="form-calculo-item-bosque-clasificacion" id="m-euclidiana" >
+                    
+                </form>
+            </div>
+
+            {% endif %}          
+
+        </div>
+
+        <!--width="400" height="400"-->
+    </div>
+
+
+     <!--CONTENEDOR FUERA DEL GRID-->
+    <div>
+      <label for="eliminar-dataset" class="custom-file-form-ap">Eliminar Dataset</label>
+      <input class="custom-file-form-ap" type="submit" value="Eliminar DataSet" onclick="location.href='{% url 'arbolYbosque-eliminar-dataset-bosque-clasificacion' %}'" name='eliminar-data-arbolYbosque' id="eliminar-dataset">
+    </div>
+
+      
+{% endblock %}

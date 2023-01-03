@@ -1,0 +1,74 @@
+
+{% extends '../../../../layouts/base.html' %}
+
+{% load static %}
+
+
+{%  block content %}
+
+    <div>
+        <h1>Seleccionar DataSet - Árbol de decisión</h1>
+    </div>
+
+    <div>
+
+        <h1 class="title">Seleccione un DataSet para la Clasificación</h1>
+
+    </div>
+
+      <div class="container">
+
+        <!--
+        <form class="card" action="" method="post" id="form-seleccion" style="overflow-y: scroll;">
+            {% csrf_token %}
+            <h4 style="margin-top: 30px; margin-bottom: 20px; padding: 10px;">
+                Seleccione el ticker de la empresa que desea analizar (solo uno)
+            </h4>
+
+            <div class="contenedor-form">   
+
+                {% for columna in listaEmpresas %}
+                    <div class="linea">
+                        <input type="checkbox" id="id_{{ columna }}" name="name_{{ columna }}" value="{{ columna }}">
+                        <label for="id_{{ columna }}"> {{ columna }}</label>
+                    </div>
+                {% endfor %}
+
+            </div>
+
+            <input type="hidden" name="form-tipo" value="form-seleccion-arbol-pronostico">
+
+            <label for="seleccion" class="custom-file-upload">Enviar</label>
+            <input type="submit" name="form-seleccion-arbol-pronostico" value="form-seleccion-arbol-pronostico" id="seleccion" >
+            
+        </form>
+        -->
+
+        
+        <form class="card" action="" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <img src="{% static 'img/upload.png' %}">
+            <h4>Seleccione el DataSet para el algoritmo de Árbol de Decisión:</h4>
+            
+                <div class="contenedor-form">
+
+                    <input type="hidden" name="form-tipo" value="form-seleccion-arbol-clasificacion">
+
+                    <label for="file-upload" class="custom-file-upload">
+                        Examinar
+                    </label>
+                    <input  id="file-upload" type="file" name="archivo-arbol">
+                
+                    <label for="subir-archivo" class="custom-file-upload">
+                         Subir
+                    </label>
+                    <input type="submit" name="submit" id="subir-archivo">   
+                </div>
+                
+            
+        </form>
+        
+    </div>
+   
+      
+{% endblock %}
